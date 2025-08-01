@@ -19,6 +19,10 @@ export declare class SvgMcpServer extends FastMCP {
     constructor(config: SvgMcpServerConfig);
     private setupTools;
     private setupResources;
+    /**
+     * Calculate bounding box for a shape element
+     */
+    private calculateShapeBoundingBox;
     start(): Promise<void>;
     stop(): Promise<void>;
 }

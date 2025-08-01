@@ -1,0 +1,1326 @@
+ea55b00c5070ef8746fb8c1fe5174523
+/* istanbul ignore next */
+function cov_3sum0qv50() {
+  var path = "C:\\GitHub\\Svg-Mcp-Server\\src\\core\\shapes\\ShapeCollections.ts";
+  var hash = "5e1d30b15e03691eddea22fc86f79578fd1c957c";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "C:\\GitHub\\Svg-Mcp-Server\\src\\core\\shapes\\ShapeCollections.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 16,
+          column: 23
+        },
+        end: {
+          line: 59,
+          column: 9
+        }
+      },
+      "1": {
+        start: {
+          line: 60,
+          column: 8
+        },
+        end: {
+          line: 65,
+          column: 10
+        }
+      },
+      "2": {
+        start: {
+          line: 71,
+          column: 23
+        },
+        end: {
+          line: 128,
+          column: 9
+        }
+      },
+      "3": {
+        start: {
+          line: 129,
+          column: 8
+        },
+        end: {
+          line: 134,
+          column: 10
+        }
+      },
+      "4": {
+        start: {
+          line: 140,
+          column: 23
+        },
+        end: {
+          line: 194,
+          column: 9
+        }
+      },
+      "5": {
+        start: {
+          line: 195,
+          column: 8
+        },
+        end: {
+          line: 200,
+          column: 10
+        }
+      },
+      "6": {
+        start: {
+          line: 206,
+          column: 23
+        },
+        end: {
+          line: 228,
+          column: 9
+        }
+      },
+      "7": {
+        start: {
+          line: 229,
+          column: 8
+        },
+        end: {
+          line: 234,
+          column: 10
+        }
+      },
+      "8": {
+        start: {
+          line: 240,
+          column: 23
+        },
+        end: {
+          line: 310,
+          column: 9
+        }
+      },
+      "9": {
+        start: {
+          line: 311,
+          column: 8
+        },
+        end: {
+          line: 316,
+          column: 10
+        }
+      },
+      "10": {
+        start: {
+          line: 322,
+          column: 23
+        },
+        end: {
+          line: 322,
+          column: 25
+        }
+      },
+      "11": {
+        start: {
+          line: 324,
+          column: 8
+        },
+        end: {
+          line: 335,
+          column: 9
+        }
+      },
+      "12": {
+        start: {
+          line: 324,
+          column: 21
+        },
+        end: {
+          line: 324,
+          column: 22
+        }
+      },
+      "13": {
+        start: {
+          line: 325,
+          column: 22
+        },
+        end: {
+          line: 325,
+          column: 45
+        }
+      },
+      "14": {
+        start: {
+          line: 326,
+          column: 12
+        },
+        end: {
+          line: 334,
+          column: 16
+        }
+      },
+      "15": {
+        start: {
+          line: 337,
+          column: 8
+        },
+        end: {
+          line: 348,
+          column: 9
+        }
+      },
+      "16": {
+        start: {
+          line: 337,
+          column: 21
+        },
+        end: {
+          line: 337,
+          column: 22
+        }
+      },
+      "17": {
+        start: {
+          line: 338,
+          column: 22
+        },
+        end: {
+          line: 338,
+          column: 44
+        }
+      },
+      "18": {
+        start: {
+          line: 339,
+          column: 12
+        },
+        end: {
+          line: 347,
+          column: 16
+        }
+      },
+      "19": {
+        start: {
+          line: 349,
+          column: 8
+        },
+        end: {
+          line: 359,
+          column: 10
+        }
+      },
+      "20": {
+        start: {
+          line: 365,
+          column: 23
+        },
+        end: {
+          line: 404,
+          column: 9
+        }
+      },
+      "21": {
+        start: {
+          line: 405,
+          column: 8
+        },
+        end: {
+          line: 415,
+          column: 10
+        }
+      },
+      "22": {
+        start: {
+          line: 421,
+          column: 8
+        },
+        end: {
+          line: 427,
+          column: 10
+        }
+      },
+      "23": {
+        start: {
+          line: 433,
+          column: 8
+        },
+        end: {
+          line: 449,
+          column: 9
+        }
+      },
+      "24": {
+        start: {
+          line: 436,
+          column: 16
+        },
+        end: {
+          line: 436,
+          column: 59
+        }
+      },
+      "25": {
+        start: {
+          line: 439,
+          column: 16
+        },
+        end: {
+          line: 439,
+          column: 61
+        }
+      },
+      "26": {
+        start: {
+          line: 441,
+          column: 16
+        },
+        end: {
+          line: 441,
+          column: 50
+        }
+      },
+      "27": {
+        start: {
+          line: 443,
+          column: 16
+        },
+        end: {
+          line: 443,
+          column: 49
+        }
+      },
+      "28": {
+        start: {
+          line: 446,
+          column: 16
+        },
+        end: {
+          line: 446,
+          column: 54
+        }
+      },
+      "29": {
+        start: {
+          line: 448,
+          column: 16
+        },
+        end: {
+          line: 448,
+          column: 28
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 15,
+            column: 4
+          },
+          end: {
+            line: 15,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 15,
+            column: 42
+          },
+          end: {
+            line: 66,
+            column: 5
+          }
+        },
+        line: 15
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 70,
+            column: 4
+          },
+          end: {
+            line: 70,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 70,
+            column: 44
+          },
+          end: {
+            line: 135,
+            column: 5
+          }
+        },
+        line: 70
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 139,
+            column: 4
+          },
+          end: {
+            line: 139,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 139,
+            column: 33
+          },
+          end: {
+            line: 201,
+            column: 5
+          }
+        },
+        line: 139
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 205,
+            column: 4
+          },
+          end: {
+            line: 205,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 205,
+            column: 32
+          },
+          end: {
+            line: 235,
+            column: 5
+          }
+        },
+        line: 205
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 239,
+            column: 4
+          },
+          end: {
+            line: 239,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 239,
+            column: 37
+          },
+          end: {
+            line: 317,
+            column: 5
+          }
+        },
+        line: 239
+      },
+      "5": {
+        name: "(anonymous_5)",
+        decl: {
+          start: {
+            line: 321,
+            column: 4
+          },
+          end: {
+            line: 321,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 321,
+            column: 82
+          },
+          end: {
+            line: 360,
+            column: 5
+          }
+        },
+        line: 321
+      },
+      "6": {
+        name: "(anonymous_6)",
+        decl: {
+          start: {
+            line: 364,
+            column: 4
+          },
+          end: {
+            line: 364,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 364,
+            column: 76
+          },
+          end: {
+            line: 416,
+            column: 5
+          }
+        },
+        line: 364
+      },
+      "7": {
+        name: "(anonymous_7)",
+        decl: {
+          start: {
+            line: 420,
+            column: 4
+          },
+          end: {
+            line: 420,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 420,
+            column: 31
+          },
+          end: {
+            line: 428,
+            column: 5
+          }
+        },
+        line: 420
+      },
+      "8": {
+        name: "(anonymous_8)",
+        decl: {
+          start: {
+            line: 432,
+            column: 4
+          },
+          end: {
+            line: 432,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 432,
+            column: 40
+          },
+          end: {
+            line: 450,
+            column: 5
+          }
+        },
+        line: 432
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 433,
+            column: 8
+          },
+          end: {
+            line: 449,
+            column: 9
+          }
+        },
+        type: "switch",
+        locations: [{
+          start: {
+            line: 434,
+            column: 12
+          },
+          end: {
+            line: 434,
+            column: 29
+          }
+        }, {
+          start: {
+            line: 435,
+            column: 12
+          },
+          end: {
+            line: 436,
+            column: 59
+          }
+        }, {
+          start: {
+            line: 437,
+            column: 12
+          },
+          end: {
+            line: 437,
+            column: 29
+          }
+        }, {
+          start: {
+            line: 438,
+            column: 12
+          },
+          end: {
+            line: 439,
+            column: 61
+          }
+        }, {
+          start: {
+            line: 440,
+            column: 12
+          },
+          end: {
+            line: 441,
+            column: 50
+          }
+        }, {
+          start: {
+            line: 442,
+            column: 12
+          },
+          end: {
+            line: 443,
+            column: 49
+          }
+        }, {
+          start: {
+            line: 444,
+            column: 12
+          },
+          end: {
+            line: 444,
+            column: 22
+          }
+        }, {
+          start: {
+            line: 445,
+            column: 12
+          },
+          end: {
+            line: 446,
+            column: 54
+          }
+        }, {
+          start: {
+            line: 447,
+            column: 12
+          },
+          end: {
+            line: 448,
+            column: 28
+          }
+        }],
+        line: 433
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0,
+      "25": 0,
+      "26": 0,
+      "27": 0,
+      "28": 0,
+      "29": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0
+    },
+    b: {
+      "0": [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    inputSourceMap: {
+      file: "C:\\GitHub\\Svg-Mcp-Server\\src\\core\\shapes\\ShapeCollections.ts",
+      mappings: "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",
+      names: [],
+      sources: ["C:\\GitHub\\Svg-Mcp-Server\\src\\core\\shapes\\ShapeCollections.ts"],
+      sourcesContent: ["/**\r\n * SVG Shape Collections\r\n * \r\n * Pre-defined collections of shapes for common use cases like diagrams,\r\n * flowcharts, icons, and geometric patterns.\r\n */\r\n\r\nimport { BasicShapeGenerator, BaseShapeOptions } from './BasicShapeGenerator.js';\r\nimport { SvgAnyElement } from '../../types/svg.js';\r\n\r\nexport interface ShapeCollection {\r\n  name: string;\r\n  description: string;\r\n  shapes: SvgAnyElement[];\r\n  boundingBox: {\r\n    x: number;\r\n    y: number;\r\n    width: number;\r\n    height: number;\r\n  };\r\n}\r\n\r\n/**\r\n * Shape Collections - Pre-defined shape sets\r\n */\r\nexport class ShapeCollections {\r\n\r\n  /**\r\n   * Create basic geometric shapes collection\r\n   */\r\n  static createGeometricShapes(options?: Partial<BaseShapeOptions>): ShapeCollection {\r\n    const shapes: SvgAnyElement[] = [\r\n      // Circle\r\n      BasicShapeGenerator.createCircle({\r\n        cx: 50,\r\n        cy: 50,\r\n        r: 30,\r\n        fill: 'none',\r\n        stroke: 'black',\r\n        strokeWidth: 2,\r\n        ...options\r\n      }),\r\n      \r\n      // Rectangle\r\n      BasicShapeGenerator.createRect({\r\n        x: 120,\r\n        y: 20,\r\n        width: 60,\r\n        height: 60,\r\n        fill: 'none',\r\n        stroke: 'black',\r\n        strokeWidth: 2,\r\n        ...options\r\n      }),\r\n      \r\n      // Triangle\r\n      BasicShapeGenerator.createRegularPolygon(250, 50, 30, 3, {\r\n        fill: 'none',\r\n        stroke: 'black',\r\n        strokeWidth: 2,\r\n        ...options\r\n      }),\r\n      \r\n      // Pentagon\r\n      BasicShapeGenerator.createRegularPolygon(350, 50, 30, 5, {\r\n        fill: 'none',\r\n        stroke: 'black',\r\n        strokeWidth: 2,\r\n        ...options\r\n      }),\r\n      \r\n      // Hexagon\r\n      BasicShapeGenerator.createRegularPolygon(450, 50, 30, 6, {\r\n        fill: 'none',\r\n        stroke: 'black',\r\n        strokeWidth: 2,\r\n        ...options\r\n      })\r\n    ];\r\n\r\n    return {\r\n      name: 'Geometric Shapes',\r\n      description: 'Basic geometric shapes including circle, rectangle, and regular polygons',\r\n      shapes,\r\n      boundingBox: { x: 20, y: 20, width: 460, height: 60 }\r\n    };\r\n  }\r\n\r\n  /**\r\n   * Create flowchart elements collection\r\n   */\r\n  static createFlowchartElements(options?: Partial<BaseShapeOptions>): ShapeCollection {\r\n    const shapes: SvgAnyElement[] = [\r\n      // Start/End (Rounded Rectangle)\r\n      BasicShapeGenerator.createRect({\r\n        x: 20,\r\n        y: 20,\r\n        width: 100,\r\n        height: 40,\r\n        rx: 20,\r\n        ry: 20,\r\n        fill: 'lightblue',\r\n        stroke: 'navy',\r\n        strokeWidth: 2,\r\n        ...options\r\n      }),\r\n      \r\n      // Process (Rectangle)\r\n      BasicShapeGenerator.createRect({\r\n        x: 150,\r\n        y: 20,\r\n        width: 100,\r\n        height: 40,\r\n        fill: 'lightgreen',\r\n        stroke: 'darkgreen',\r\n        strokeWidth: 2,\r\n        ...options\r\n      }),\r\n      \r\n      // Decision (Diamond)\r\n      BasicShapeGenerator.createRegularPolygon(340, 40, 30, 4, {\r\n        fill: 'lightyellow',\r\n        stroke: 'orange',\r\n        strokeWidth: 2,\r\n        ...options\r\n      }),\r\n      \r\n      // Document (Rectangle with wave bottom)\r\n      BasicShapeGenerator.createRect({\r\n        x: 400,\r\n        y: 20,\r\n        width: 80,\r\n        height: 40,\r\n        fill: 'lightcoral',\r\n        stroke: 'darkred',\r\n        strokeWidth: 2,\r\n        ...options\r\n      }),\r\n      \r\n      // Arrow (pointing right)\r\n      BasicShapeGenerator.createPolygon([\r\n        { x: 520, y: 20 },\r\n        { x: 580, y: 20 },\r\n        { x: 600, y: 40 },\r\n        { x: 580, y: 60 },\r\n        { x: 520, y: 60 },\r\n        { x: 540, y: 40 }\r\n      ], {\r\n        fill: 'lightgray',\r\n        stroke: 'black',\r\n        strokeWidth: 2,\r\n        ...options\r\n      })\r\n    ];\r\n\r\n    return {\r\n      name: 'Flowchart Elements',\r\n      description: 'Common flowchart symbols including start/end, process, decision, and connector shapes',\r\n      shapes,\r\n      boundingBox: { x: 20, y: 20, width: 580, height: 40 }\r\n    };\r\n  }\r\n\r\n  /**\r\n   * Create arrow collection\r\n   */\r\n  static createArrows(options?: Partial<BaseShapeOptions>): ShapeCollection {\r\n    const shapes: SvgAnyElement[] = [\r\n      // Right arrow\r\n      BasicShapeGenerator.createPolygon([\r\n        { x: 20, y: 30 },\r\n        { x: 60, y: 30 },\r\n        { x: 60, y: 20 },\r\n        { x: 80, y: 40 },\r\n        { x: 60, y: 60 },\r\n        { x: 60, y: 50 },\r\n        { x: 20, y: 50 }\r\n      ], {\r\n        fill: 'black',\r\n        ...options\r\n      }),\r\n      \r\n      // Left arrow\r\n      BasicShapeGenerator.createPolygon([\r\n        { x: 120, y: 30 },\r\n        { x: 160, y: 30 },\r\n        { x: 160, y: 20 },\r\n        { x: 180, y: 40 },\r\n        { x: 160, y: 60 },\r\n        { x: 160, y: 50 },\r\n        { x: 120, y: 50 },\r\n        { x: 100, y: 40 }\r\n      ], {\r\n        fill: 'black',\r\n        ...options\r\n      }),\r\n      \r\n      // Up arrow\r\n      BasicShapeGenerator.createPolygon([\r\n        { x: 230, y: 60 },\r\n        { x: 230, y: 30 },\r\n        { x: 220, y: 30 },\r\n        { x: 240, y: 10 },\r\n        { x: 260, y: 30 },\r\n        { x: 250, y: 30 },\r\n        { x: 250, y: 60 }\r\n      ], {\r\n        fill: 'black',\r\n        ...options\r\n      }),\r\n      \r\n      // Down arrow\r\n      BasicShapeGenerator.createPolygon([\r\n        { x: 300, y: 20 },\r\n        { x: 300, y: 50 },\r\n        { x: 290, y: 50 },\r\n        { x: 310, y: 70 },\r\n        { x: 330, y: 50 },\r\n        { x: 320, y: 50 },\r\n        { x: 320, y: 20 }\r\n      ], {\r\n        fill: 'black',\r\n        ...options\r\n      })\r\n    ];\r\n\r\n    return {\r\n      name: 'Arrows',\r\n      description: 'Directional arrows pointing up, down, left, and right',\r\n      shapes,\r\n      boundingBox: { x: 20, y: 10, width: 310, height: 60 }\r\n    };\r\n  }\r\n\r\n  /**\r\n   * Create star collection\r\n   */\r\n  static createStars(options?: Partial<BaseShapeOptions>): ShapeCollection {\r\n    const shapes: SvgAnyElement[] = [\r\n      // 5-point star\r\n      BasicShapeGenerator.createStar(50, 50, 30, 15, 5, {\r\n        fill: 'gold',\r\n        stroke: 'orange',\r\n        strokeWidth: 2,\r\n        ...options\r\n      }),\r\n      \r\n      // 6-point star\r\n      BasicShapeGenerator.createStar(150, 50, 30, 15, 6, {\r\n        fill: 'silver',\r\n        stroke: 'gray',\r\n        strokeWidth: 2,\r\n        ...options\r\n      }),\r\n      \r\n      // 8-point star\r\n      BasicShapeGenerator.createStar(250, 50, 30, 15, 8, {\r\n        fill: 'lightblue',\r\n        stroke: 'blue',\r\n        strokeWidth: 2,\r\n        ...options\r\n      })\r\n    ];\r\n\r\n    return {\r\n      name: 'Stars',\r\n      description: 'Star shapes with different numbers of points',\r\n      shapes,\r\n      boundingBox: { x: 20, y: 20, width: 260, height: 60 }\r\n    };\r\n  }\r\n\r\n  /**\r\n   * Create basic UI elements collection\r\n   */\r\n  static createUIElements(options?: Partial<BaseShapeOptions>): ShapeCollection {\r\n    const shapes: SvgAnyElement[] = [\r\n      // Button\r\n      BasicShapeGenerator.createRect({\r\n        x: 20,\r\n        y: 20,\r\n        width: 80,\r\n        height: 30,\r\n        rx: 5,\r\n        ry: 5,\r\n        fill: 'lightblue',\r\n        stroke: 'blue',\r\n        strokeWidth: 1,\r\n        ...options\r\n      }),\r\n      \r\n      // Text field\r\n      BasicShapeGenerator.createRect({\r\n        x: 120,\r\n        y: 20,\r\n        width: 120,\r\n        height: 30,\r\n        fill: 'white',\r\n        stroke: 'gray',\r\n        strokeWidth: 1,\r\n        ...options\r\n      }),\r\n      \r\n      // Checkbox (unchecked)\r\n      BasicShapeGenerator.createRect({\r\n        x: 260,\r\n        y: 25,\r\n        width: 20,\r\n        height: 20,\r\n        fill: 'white',\r\n        stroke: 'black',\r\n        strokeWidth: 1,\r\n        ...options\r\n      }),\r\n      \r\n      // Radio button (unchecked)\r\n      BasicShapeGenerator.createCircle({\r\n        cx: 310,\r\n        cy: 35,\r\n        r: 10,\r\n        fill: 'white',\r\n        stroke: 'black',\r\n        strokeWidth: 1,\r\n        ...options\r\n      }),\r\n      \r\n      // Progress bar background\r\n      BasicShapeGenerator.createRect({\r\n        x: 340,\r\n        y: 30,\r\n        width: 100,\r\n        height: 10,\r\n        rx: 5,\r\n        ry: 5,\r\n        fill: 'lightgray',\r\n        stroke: 'gray',\r\n        strokeWidth: 1,\r\n        ...options\r\n      }),\r\n      \r\n      // Progress bar fill\r\n      BasicShapeGenerator.createRect({\r\n        x: 342,\r\n        y: 32,\r\n        width: 60,\r\n        height: 6,\r\n        rx: 3,\r\n        ry: 3,\r\n        fill: 'blue',\r\n        ...options\r\n      })\r\n    ];\r\n\r\n    return {\r\n      name: 'UI Elements',\r\n      description: 'Basic user interface elements like buttons, text fields, and form controls',\r\n      shapes,\r\n      boundingBox: { x: 20, y: 20, width: 420, height: 30 }\r\n    };\r\n  }\r\n\r\n  /**\r\n   * Create grid pattern\r\n   */\r\n  static createGrid(\r\n    startX: number,\r\n    startY: number,\r\n    cellWidth: number,\r\n    cellHeight: number,\r\n    rows: number,\r\n    cols: number,\r\n    options?: Partial<BaseShapeOptions>\r\n  ): ShapeCollection {\r\n    const shapes: SvgAnyElement[] = [];\r\n    \r\n    // Create horizontal lines\r\n    for (let i = 0; i <= rows; i++) {\r\n      const y = startY + i * cellHeight;\r\n      shapes.push(BasicShapeGenerator.createLine({\r\n        x1: startX,\r\n        y1: y,\r\n        x2: startX + cols * cellWidth,\r\n        y2: y,\r\n        stroke: 'lightgray',\r\n        strokeWidth: 1,\r\n        ...options\r\n      }));\r\n    }\r\n    \r\n    // Create vertical lines\r\n    for (let j = 0; j <= cols; j++) {\r\n      const x = startX + j * cellWidth;\r\n      shapes.push(BasicShapeGenerator.createLine({\r\n        x1: x,\r\n        y1: startY,\r\n        x2: x,\r\n        y2: startY + rows * cellHeight,\r\n        stroke: 'lightgray',\r\n        strokeWidth: 1,\r\n        ...options\r\n      }));\r\n    }\r\n\r\n    return {\r\n      name: 'Grid',\r\n      description: `${rows}x${cols} grid pattern`,\r\n      shapes,\r\n      boundingBox: {\r\n        x: startX,\r\n        y: startY,\r\n        width: cols * cellWidth,\r\n        height: rows * cellHeight\r\n      }\r\n    };\r\n  }\r\n\r\n  /**\r\n   * Create coordinate system (axes)\r\n   */\r\n  static createCoordinateSystem(\r\n    centerX: number,\r\n    centerY: number,\r\n    width: number,\r\n    height: number,\r\n    options?: Partial<BaseShapeOptions>\r\n  ): ShapeCollection {\r\n    const shapes: SvgAnyElement[] = [\r\n      // X-axis\r\n      BasicShapeGenerator.createLine({\r\n        x1: centerX - width / 2,\r\n        y1: centerY,\r\n        x2: centerX + width / 2,\r\n        y2: centerY,\r\n        stroke: 'black',\r\n        strokeWidth: 2,\r\n        ...options\r\n      }),\r\n      \r\n      // Y-axis\r\n      BasicShapeGenerator.createLine({\r\n        x1: centerX,\r\n        y1: centerY - height / 2,\r\n        x2: centerX,\r\n        y2: centerY + height / 2,\r\n        stroke: 'black',\r\n        strokeWidth: 2,\r\n        ...options\r\n      }),\r\n      \r\n      // X-axis arrow\r\n      BasicShapeGenerator.createPolygon([\r\n        { x: centerX + width / 2, y: centerY },\r\n        { x: centerX + width / 2 - 10, y: centerY - 5 },\r\n        { x: centerX + width / 2 - 10, y: centerY + 5 }\r\n      ], {\r\n        fill: 'black',\r\n        ...options\r\n      }),\r\n      \r\n      // Y-axis arrow\r\n      BasicShapeGenerator.createPolygon([\r\n        { x: centerX, y: centerY - height / 2 },\r\n        { x: centerX - 5, y: centerY - height / 2 + 10 },\r\n        { x: centerX + 5, y: centerY - height / 2 + 10 }\r\n      ], {\r\n        fill: 'black',\r\n        ...options\r\n      })\r\n    ];\r\n\r\n    return {\r\n      name: 'Coordinate System',\r\n      description: 'X-Y coordinate system with axes and arrows',\r\n      shapes,\r\n      boundingBox: {\r\n        x: centerX - width / 2,\r\n        y: centerY - height / 2,\r\n        width,\r\n        height\r\n      }\r\n    };\r\n  }\r\n\r\n  /**\r\n   * Get all available collections\r\n   */\r\n  static getAllCollections(): string[] {\r\n    return [\r\n      'geometricShapes',\r\n      'flowchartElements',\r\n      'arrows',\r\n      'stars',\r\n      'uiElements'\r\n    ];\r\n  }\r\n\r\n  /**\r\n   * Get collection by name\r\n   */\r\n  static getCollection(name: string, options?: Partial<BaseShapeOptions>): ShapeCollection | null {\r\n    switch (name.toLowerCase()) {\r\n      case 'geometric':\r\n      case 'geometricshapes':\r\n        return this.createGeometricShapes(options);\r\n      case 'flowchart':\r\n      case 'flowchartelements':\r\n        return this.createFlowchartElements(options);\r\n      case 'arrows':\r\n        return this.createArrows(options);\r\n      case 'stars':\r\n        return this.createStars(options);\r\n      case 'ui':\r\n      case 'uielements':\r\n        return this.createUIElements(options);\r\n      default:\r\n        return null;\r\n    }\r\n  }\r\n}\r\n"],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "5e1d30b15e03691eddea22fc86f79578fd1c957c"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_3sum0qv50 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_3sum0qv50();
+/**
+ * SVG Shape Collections
+ *
+ * Pre-defined collections of shapes for common use cases like diagrams,
+ * flowcharts, icons, and geometric patterns.
+ */
+import { BasicShapeGenerator } from './BasicShapeGenerator.js';
+/**
+ * Shape Collections - Pre-defined shape sets
+ */
+export class ShapeCollections {
+  /**
+   * Create basic geometric shapes collection
+   */
+  static createGeometricShapes(options) {
+    /* istanbul ignore next */
+    cov_3sum0qv50().f[0]++;
+    const shapes =
+    /* istanbul ignore next */
+    (cov_3sum0qv50().s[0]++, [
+    // Circle
+    BasicShapeGenerator.createCircle({
+      cx: 50,
+      cy: 50,
+      r: 30,
+      fill: 'none',
+      stroke: 'black',
+      strokeWidth: 2,
+      ...options
+    }),
+    // Rectangle
+    BasicShapeGenerator.createRect({
+      x: 120,
+      y: 20,
+      width: 60,
+      height: 60,
+      fill: 'none',
+      stroke: 'black',
+      strokeWidth: 2,
+      ...options
+    }),
+    // Triangle
+    BasicShapeGenerator.createRegularPolygon(250, 50, 30, 3, {
+      fill: 'none',
+      stroke: 'black',
+      strokeWidth: 2,
+      ...options
+    }),
+    // Pentagon
+    BasicShapeGenerator.createRegularPolygon(350, 50, 30, 5, {
+      fill: 'none',
+      stroke: 'black',
+      strokeWidth: 2,
+      ...options
+    }),
+    // Hexagon
+    BasicShapeGenerator.createRegularPolygon(450, 50, 30, 6, {
+      fill: 'none',
+      stroke: 'black',
+      strokeWidth: 2,
+      ...options
+    })]);
+    /* istanbul ignore next */
+    cov_3sum0qv50().s[1]++;
+    return {
+      name: 'Geometric Shapes',
+      description: 'Basic geometric shapes including circle, rectangle, and regular polygons',
+      shapes,
+      boundingBox: {
+        x: 20,
+        y: 20,
+        width: 460,
+        height: 60
+      }
+    };
+  }
+  /**
+   * Create flowchart elements collection
+   */
+  static createFlowchartElements(options) {
+    /* istanbul ignore next */
+    cov_3sum0qv50().f[1]++;
+    const shapes =
+    /* istanbul ignore next */
+    (cov_3sum0qv50().s[2]++, [
+    // Start/End (Rounded Rectangle)
+    BasicShapeGenerator.createRect({
+      x: 20,
+      y: 20,
+      width: 100,
+      height: 40,
+      rx: 20,
+      ry: 20,
+      fill: 'lightblue',
+      stroke: 'navy',
+      strokeWidth: 2,
+      ...options
+    }),
+    // Process (Rectangle)
+    BasicShapeGenerator.createRect({
+      x: 150,
+      y: 20,
+      width: 100,
+      height: 40,
+      fill: 'lightgreen',
+      stroke: 'darkgreen',
+      strokeWidth: 2,
+      ...options
+    }),
+    // Decision (Diamond)
+    BasicShapeGenerator.createRegularPolygon(340, 40, 30, 4, {
+      fill: 'lightyellow',
+      stroke: 'orange',
+      strokeWidth: 2,
+      ...options
+    }),
+    // Document (Rectangle with wave bottom)
+    BasicShapeGenerator.createRect({
+      x: 400,
+      y: 20,
+      width: 80,
+      height: 40,
+      fill: 'lightcoral',
+      stroke: 'darkred',
+      strokeWidth: 2,
+      ...options
+    }),
+    // Arrow (pointing right)
+    BasicShapeGenerator.createPolygon([{
+      x: 520,
+      y: 20
+    }, {
+      x: 580,
+      y: 20
+    }, {
+      x: 600,
+      y: 40
+    }, {
+      x: 580,
+      y: 60
+    }, {
+      x: 520,
+      y: 60
+    }, {
+      x: 540,
+      y: 40
+    }], {
+      fill: 'lightgray',
+      stroke: 'black',
+      strokeWidth: 2,
+      ...options
+    })]);
+    /* istanbul ignore next */
+    cov_3sum0qv50().s[3]++;
+    return {
+      name: 'Flowchart Elements',
+      description: 'Common flowchart symbols including start/end, process, decision, and connector shapes',
+      shapes,
+      boundingBox: {
+        x: 20,
+        y: 20,
+        width: 580,
+        height: 40
+      }
+    };
+  }
+  /**
+   * Create arrow collection
+   */
+  static createArrows(options) {
+    /* istanbul ignore next */
+    cov_3sum0qv50().f[2]++;
+    const shapes =
+    /* istanbul ignore next */
+    (cov_3sum0qv50().s[4]++, [
+    // Right arrow
+    BasicShapeGenerator.createPolygon([{
+      x: 20,
+      y: 30
+    }, {
+      x: 60,
+      y: 30
+    }, {
+      x: 60,
+      y: 20
+    }, {
+      x: 80,
+      y: 40
+    }, {
+      x: 60,
+      y: 60
+    }, {
+      x: 60,
+      y: 50
+    }, {
+      x: 20,
+      y: 50
+    }], {
+      fill: 'black',
+      ...options
+    }),
+    // Left arrow
+    BasicShapeGenerator.createPolygon([{
+      x: 120,
+      y: 30
+    }, {
+      x: 160,
+      y: 30
+    }, {
+      x: 160,
+      y: 20
+    }, {
+      x: 180,
+      y: 40
+    }, {
+      x: 160,
+      y: 60
+    }, {
+      x: 160,
+      y: 50
+    }, {
+      x: 120,
+      y: 50
+    }, {
+      x: 100,
+      y: 40
+    }], {
+      fill: 'black',
+      ...options
+    }),
+    // Up arrow
+    BasicShapeGenerator.createPolygon([{
+      x: 230,
+      y: 60
+    }, {
+      x: 230,
+      y: 30
+    }, {
+      x: 220,
+      y: 30
+    }, {
+      x: 240,
+      y: 10
+    }, {
+      x: 260,
+      y: 30
+    }, {
+      x: 250,
+      y: 30
+    }, {
+      x: 250,
+      y: 60
+    }], {
+      fill: 'black',
+      ...options
+    }),
+    // Down arrow
+    BasicShapeGenerator.createPolygon([{
+      x: 300,
+      y: 20
+    }, {
+      x: 300,
+      y: 50
+    }, {
+      x: 290,
+      y: 50
+    }, {
+      x: 310,
+      y: 70
+    }, {
+      x: 330,
+      y: 50
+    }, {
+      x: 320,
+      y: 50
+    }, {
+      x: 320,
+      y: 20
+    }], {
+      fill: 'black',
+      ...options
+    })]);
+    /* istanbul ignore next */
+    cov_3sum0qv50().s[5]++;
+    return {
+      name: 'Arrows',
+      description: 'Directional arrows pointing up, down, left, and right',
+      shapes,
+      boundingBox: {
+        x: 20,
+        y: 10,
+        width: 310,
+        height: 60
+      }
+    };
+  }
+  /**
+   * Create star collection
+   */
+  static createStars(options) {
+    /* istanbul ignore next */
+    cov_3sum0qv50().f[3]++;
+    const shapes =
+    /* istanbul ignore next */
+    (cov_3sum0qv50().s[6]++, [
+    // 5-point star
+    BasicShapeGenerator.createStar(50, 50, 30, 15, 5, {
+      fill: 'gold',
+      stroke: 'orange',
+      strokeWidth: 2,
+      ...options
+    }),
+    // 6-point star
+    BasicShapeGenerator.createStar(150, 50, 30, 15, 6, {
+      fill: 'silver',
+      stroke: 'gray',
+      strokeWidth: 2,
+      ...options
+    }),
+    // 8-point star
+    BasicShapeGenerator.createStar(250, 50, 30, 15, 8, {
+      fill: 'lightblue',
+      stroke: 'blue',
+      strokeWidth: 2,
+      ...options
+    })]);
+    /* istanbul ignore next */
+    cov_3sum0qv50().s[7]++;
+    return {
+      name: 'Stars',
+      description: 'Star shapes with different numbers of points',
+      shapes,
+      boundingBox: {
+        x: 20,
+        y: 20,
+        width: 260,
+        height: 60
+      }
+    };
+  }
+  /**
+   * Create basic UI elements collection
+   */
+  static createUIElements(options) {
+    /* istanbul ignore next */
+    cov_3sum0qv50().f[4]++;
+    const shapes =
+    /* istanbul ignore next */
+    (cov_3sum0qv50().s[8]++, [
+    // Button
+    BasicShapeGenerator.createRect({
+      x: 20,
+      y: 20,
+      width: 80,
+      height: 30,
+      rx: 5,
+      ry: 5,
+      fill: 'lightblue',
+      stroke: 'blue',
+      strokeWidth: 1,
+      ...options
+    }),
+    // Text field
+    BasicShapeGenerator.createRect({
+      x: 120,
+      y: 20,
+      width: 120,
+      height: 30,
+      fill: 'white',
+      stroke: 'gray',
+      strokeWidth: 1,
+      ...options
+    }),
+    // Checkbox (unchecked)
+    BasicShapeGenerator.createRect({
+      x: 260,
+      y: 25,
+      width: 20,
+      height: 20,
+      fill: 'white',
+      stroke: 'black',
+      strokeWidth: 1,
+      ...options
+    }),
+    // Radio button (unchecked)
+    BasicShapeGenerator.createCircle({
+      cx: 310,
+      cy: 35,
+      r: 10,
+      fill: 'white',
+      stroke: 'black',
+      strokeWidth: 1,
+      ...options
+    }),
+    // Progress bar background
+    BasicShapeGenerator.createRect({
+      x: 340,
+      y: 30,
+      width: 100,
+      height: 10,
+      rx: 5,
+      ry: 5,
+      fill: 'lightgray',
+      stroke: 'gray',
+      strokeWidth: 1,
+      ...options
+    }),
+    // Progress bar fill
+    BasicShapeGenerator.createRect({
+      x: 342,
+      y: 32,
+      width: 60,
+      height: 6,
+      rx: 3,
+      ry: 3,
+      fill: 'blue',
+      ...options
+    })]);
+    /* istanbul ignore next */
+    cov_3sum0qv50().s[9]++;
+    return {
+      name: 'UI Elements',
+      description: 'Basic user interface elements like buttons, text fields, and form controls',
+      shapes,
+      boundingBox: {
+        x: 20,
+        y: 20,
+        width: 420,
+        height: 30
+      }
+    };
+  }
+  /**
+   * Create grid pattern
+   */
+  static createGrid(startX, startY, cellWidth, cellHeight, rows, cols, options) {
+    /* istanbul ignore next */
+    cov_3sum0qv50().f[5]++;
+    const shapes =
+    /* istanbul ignore next */
+    (cov_3sum0qv50().s[10]++, []);
+    // Create horizontal lines
+    /* istanbul ignore next */
+    cov_3sum0qv50().s[11]++;
+    for (let i =
+    /* istanbul ignore next */
+    (cov_3sum0qv50().s[12]++, 0); i <= rows; i++) {
+      const y =
+      /* istanbul ignore next */
+      (cov_3sum0qv50().s[13]++, startY + i * cellHeight);
+      /* istanbul ignore next */
+      cov_3sum0qv50().s[14]++;
+      shapes.push(BasicShapeGenerator.createLine({
+        x1: startX,
+        y1: y,
+        x2: startX + cols * cellWidth,
+        y2: y,
+        stroke: 'lightgray',
+        strokeWidth: 1,
+        ...options
+      }));
+    }
+    // Create vertical lines
+    /* istanbul ignore next */
+    cov_3sum0qv50().s[15]++;
+    for (let j =
+    /* istanbul ignore next */
+    (cov_3sum0qv50().s[16]++, 0); j <= cols; j++) {
+      const x =
+      /* istanbul ignore next */
+      (cov_3sum0qv50().s[17]++, startX + j * cellWidth);
+      /* istanbul ignore next */
+      cov_3sum0qv50().s[18]++;
+      shapes.push(BasicShapeGenerator.createLine({
+        x1: x,
+        y1: startY,
+        x2: x,
+        y2: startY + rows * cellHeight,
+        stroke: 'lightgray',
+        strokeWidth: 1,
+        ...options
+      }));
+    }
+    /* istanbul ignore next */
+    cov_3sum0qv50().s[19]++;
+    return {
+      name: 'Grid',
+      description: `${rows}x${cols} grid pattern`,
+      shapes,
+      boundingBox: {
+        x: startX,
+        y: startY,
+        width: cols * cellWidth,
+        height: rows * cellHeight
+      }
+    };
+  }
+  /**
+   * Create coordinate system (axes)
+   */
+  static createCoordinateSystem(centerX, centerY, width, height, options) {
+    /* istanbul ignore next */
+    cov_3sum0qv50().f[6]++;
+    const shapes =
+    /* istanbul ignore next */
+    (cov_3sum0qv50().s[20]++, [
+    // X-axis
+    BasicShapeGenerator.createLine({
+      x1: centerX - width / 2,
+      y1: centerY,
+      x2: centerX + width / 2,
+      y2: centerY,
+      stroke: 'black',
+      strokeWidth: 2,
+      ...options
+    }),
+    // Y-axis
+    BasicShapeGenerator.createLine({
+      x1: centerX,
+      y1: centerY - height / 2,
+      x2: centerX,
+      y2: centerY + height / 2,
+      stroke: 'black',
+      strokeWidth: 2,
+      ...options
+    }),
+    // X-axis arrow
+    BasicShapeGenerator.createPolygon([{
+      x: centerX + width / 2,
+      y: centerY
+    }, {
+      x: centerX + width / 2 - 10,
+      y: centerY - 5
+    }, {
+      x: centerX + width / 2 - 10,
+      y: centerY + 5
+    }], {
+      fill: 'black',
+      ...options
+    }),
+    // Y-axis arrow
+    BasicShapeGenerator.createPolygon([{
+      x: centerX,
+      y: centerY - height / 2
+    }, {
+      x: centerX - 5,
+      y: centerY - height / 2 + 10
+    }, {
+      x: centerX + 5,
+      y: centerY - height / 2 + 10
+    }], {
+      fill: 'black',
+      ...options
+    })]);
+    /* istanbul ignore next */
+    cov_3sum0qv50().s[21]++;
+    return {
+      name: 'Coordinate System',
+      description: 'X-Y coordinate system with axes and arrows',
+      shapes,
+      boundingBox: {
+        x: centerX - width / 2,
+        y: centerY - height / 2,
+        width,
+        height
+      }
+    };
+  }
+  /**
+   * Get all available collections
+   */
+  static getAllCollections() {
+    /* istanbul ignore next */
+    cov_3sum0qv50().f[7]++;
+    cov_3sum0qv50().s[22]++;
+    return ['geometricShapes', 'flowchartElements', 'arrows', 'stars', 'uiElements'];
+  }
+  /**
+   * Get collection by name
+   */
+  static getCollection(name, options) {
+    /* istanbul ignore next */
+    cov_3sum0qv50().f[8]++;
+    cov_3sum0qv50().s[23]++;
+    switch (name.toLowerCase()) {
+      case 'geometric':
+        /* istanbul ignore next */
+        cov_3sum0qv50().b[0][0]++;
+      case 'geometricshapes':
+        /* istanbul ignore next */
+        cov_3sum0qv50().b[0][1]++;
+        cov_3sum0qv50().s[24]++;
+        return this.createGeometricShapes(options);
+      case 'flowchart':
+        /* istanbul ignore next */
+        cov_3sum0qv50().b[0][2]++;
+      case 'flowchartelements':
+        /* istanbul ignore next */
+        cov_3sum0qv50().b[0][3]++;
+        cov_3sum0qv50().s[25]++;
+        return this.createFlowchartElements(options);
+      case 'arrows':
+        /* istanbul ignore next */
+        cov_3sum0qv50().b[0][4]++;
+        cov_3sum0qv50().s[26]++;
+        return this.createArrows(options);
+      case 'stars':
+        /* istanbul ignore next */
+        cov_3sum0qv50().b[0][5]++;
+        cov_3sum0qv50().s[27]++;
+        return this.createStars(options);
+      case 'ui':
+        /* istanbul ignore next */
+        cov_3sum0qv50().b[0][6]++;
+      case 'uielements':
+        /* istanbul ignore next */
+        cov_3sum0qv50().b[0][7]++;
+        cov_3sum0qv50().s[28]++;
+        return this.createUIElements(options);
+      default:
+        /* istanbul ignore next */
+        cov_3sum0qv50().b[0][8]++;
+        cov_3sum0qv50().s[29]++;
+        return null;
+    }
+  }
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfM3N1bTBxdjUwIiwiYWN0dWFsQ292ZXJhZ2UiLCJCYXNpY1NoYXBlR2VuZXJhdG9yIiwiU2hhcGVDb2xsZWN0aW9ucyIsImNyZWF0ZUdlb21ldHJpY1NoYXBlcyIsIm9wdGlvbnMiLCJmIiwic2hhcGVzIiwicyIsImNyZWF0ZUNpcmNsZSIsImN4IiwiY3kiLCJyIiwiZmlsbCIsInN0cm9rZSIsInN0cm9rZVdpZHRoIiwiY3JlYXRlUmVjdCIsIngiLCJ5Iiwid2lkdGgiLCJoZWlnaHQiLCJjcmVhdGVSZWd1bGFyUG9seWdvbiIsIm5hbWUiLCJkZXNjcmlwdGlvbiIsImJvdW5kaW5nQm94IiwiY3JlYXRlRmxvd2NoYXJ0RWxlbWVudHMiLCJyeCIsInJ5IiwiY3JlYXRlUG9seWdvbiIsImNyZWF0ZUFycm93cyIsImNyZWF0ZVN0YXJzIiwiY3JlYXRlU3RhciIsImNyZWF0ZVVJRWxlbWVudHMiLCJjcmVhdGVHcmlkIiwic3RhcnRYIiwic3RhcnRZIiwiY2VsbFdpZHRoIiwiY2VsbEhlaWdodCIsInJvd3MiLCJjb2xzIiwiaSIsInB1c2giLCJjcmVhdGVMaW5lIiwieDEiLCJ5MSIsIngyIiwieTIiLCJqIiwiY3JlYXRlQ29vcmRpbmF0ZVN5c3RlbSIsImNlbnRlclgiLCJjZW50ZXJZIiwiZ2V0QWxsQ29sbGVjdGlvbnMiLCJnZXRDb2xsZWN0aW9uIiwidG9Mb3dlckNhc2UiLCJiIl0sInNvdXJjZXMiOlsiQzpcXEdpdEh1YlxcU3ZnLU1jcC1TZXJ2ZXJcXHNyY1xcY29yZVxcc2hhcGVzXFxTaGFwZUNvbGxlY3Rpb25zLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxyXG4gKiBTVkcgU2hhcGUgQ29sbGVjdGlvbnNcclxuICogXHJcbiAqIFByZS1kZWZpbmVkIGNvbGxlY3Rpb25zIG9mIHNoYXBlcyBmb3IgY29tbW9uIHVzZSBjYXNlcyBsaWtlIGRpYWdyYW1zLFxyXG4gKiBmbG93Y2hhcnRzLCBpY29ucywgYW5kIGdlb21ldHJpYyBwYXR0ZXJucy5cclxuICovXHJcblxyXG5pbXBvcnQgeyBCYXNpY1NoYXBlR2VuZXJhdG9yLCBCYXNlU2hhcGVPcHRpb25zIH0gZnJvbSAnLi9CYXNpY1NoYXBlR2VuZXJhdG9yLmpzJztcclxuaW1wb3J0IHsgU3ZnQW55RWxlbWVudCB9IGZyb20gJy4uLy4uL3R5cGVzL3N2Zy5qcyc7XHJcblxyXG5leHBvcnQgaW50ZXJmYWNlIFNoYXBlQ29sbGVjdGlvbiB7XHJcbiAgbmFtZTogc3RyaW5nO1xyXG4gIGRlc2NyaXB0aW9uOiBzdHJpbmc7XHJcbiAgc2hhcGVzOiBTdmdBbnlFbGVtZW50W107XHJcbiAgYm91bmRpbmdCb3g6IHtcclxuICAgIHg6IG51bWJlcjtcclxuICAgIHk6IG51bWJlcjtcclxuICAgIHdpZHRoOiBudW1iZXI7XHJcbiAgICBoZWlnaHQ6IG51bWJlcjtcclxuICB9O1xyXG59XHJcblxyXG4vKipcclxuICogU2hhcGUgQ29sbGVjdGlvbnMgLSBQcmUtZGVmaW5lZCBzaGFwZSBzZXRzXHJcbiAqL1xyXG5leHBvcnQgY2xhc3MgU2hhcGVDb2xsZWN0aW9ucyB7XHJcblxyXG4gIC8qKlxyXG4gICAqIENyZWF0ZSBiYXNpYyBnZW9tZXRyaWMgc2hhcGVzIGNvbGxlY3Rpb25cclxuICAgKi9cclxuICBzdGF0aWMgY3JlYXRlR2VvbWV0cmljU2hhcGVzKG9wdGlvbnM/OiBQYXJ0aWFsPEJhc2VTaGFwZU9wdGlvbnM+KTogU2hhcGVDb2xsZWN0aW9uIHtcclxuICAgIGNvbnN0IHNoYXBlczogU3ZnQW55RWxlbWVudFtdID0gW1xyXG4gICAgICAvLyBDaXJjbGVcclxuICAgICAgQmFzaWNTaGFwZUdlbmVyYXRvci5jcmVhdGVDaXJjbGUoe1xyXG4gICAgICAgIGN4OiA1MCxcclxuICAgICAgICBjeTogNTAsXHJcbiAgICAgICAgcjogMzAsXHJcbiAgICAgICAgZmlsbDogJ25vbmUnLFxyXG4gICAgICAgIHN0cm9rZTogJ2JsYWNrJyxcclxuICAgICAgICBzdHJva2VXaWR0aDogMixcclxuICAgICAgICAuLi5vcHRpb25zXHJcbiAgICAgIH0pLFxyXG4gICAgICBcclxuICAgICAgLy8gUmVjdGFuZ2xlXHJcbiAgICAgIEJhc2ljU2hhcGVHZW5lcmF0b3IuY3JlYXRlUmVjdCh7XHJcbiAgICAgICAgeDogMTIwLFxyXG4gICAgICAgIHk6IDIwLFxyXG4gICAgICAgIHdpZHRoOiA2MCxcclxuICAgICAgICBoZWlnaHQ6IDYwLFxyXG4gICAgICAgIGZpbGw6ICdub25lJyxcclxuICAgICAgICBzdHJva2U6ICdibGFjaycsXHJcbiAgICAgICAgc3Ryb2tlV2lkdGg6IDIsXHJcbiAgICAgICAgLi4ub3B0aW9uc1xyXG4gICAgICB9KSxcclxuICAgICAgXHJcbiAgICAgIC8vIFRyaWFuZ2xlXHJcbiAgICAgIEJhc2ljU2hhcGVHZW5lcmF0b3IuY3JlYXRlUmVndWxhclBvbHlnb24oMjUwLCA1MCwgMzAsIDMsIHtcclxuICAgICAgICBmaWxsOiAnbm9uZScsXHJcbiAgICAgICAgc3Ryb2tlOiAnYmxhY2snLFxyXG4gICAgICAgIHN0cm9rZVdpZHRoOiAyLFxyXG4gICAgICAgIC4uLm9wdGlvbnNcclxuICAgICAgfSksXHJcbiAgICAgIFxyXG4gICAgICAvLyBQZW50YWdvblxyXG4gICAgICBCYXNpY1NoYXBlR2VuZXJhdG9yLmNyZWF0ZVJlZ3VsYXJQb2x5Z29uKDM1MCwgNTAsIDMwLCA1LCB7XHJcbiAgICAgICAgZmlsbDogJ25vbmUnLFxyXG4gICAgICAgIHN0cm9rZTogJ2JsYWNrJyxcclxuICAgICAgICBzdHJva2VXaWR0aDogMixcclxuICAgICAgICAuLi5vcHRpb25zXHJcbiAgICAgIH0pLFxyXG4gICAgICBcclxuICAgICAgLy8gSGV4YWdvblxyXG4gICAgICBCYXNpY1NoYXBlR2VuZXJhdG9yLmNyZWF0ZVJlZ3VsYXJQb2x5Z29uKDQ1MCwgNTAsIDMwLCA2LCB7XHJcbiAgICAgICAgZmlsbDogJ25vbmUnLFxyXG4gICAgICAgIHN0cm9rZTogJ2JsYWNrJyxcclxuICAgICAgICBzdHJva2VXaWR0aDogMixcclxuICAgICAgICAuLi5vcHRpb25zXHJcbiAgICAgIH0pXHJcbiAgICBdO1xyXG5cclxuICAgIHJldHVybiB7XHJcbiAgICAgIG5hbWU6ICdHZW9tZXRyaWMgU2hhcGVzJyxcclxuICAgICAgZGVzY3JpcHRpb246ICdCYXNpYyBnZW9tZXRyaWMgc2hhcGVzIGluY2x1ZGluZyBjaXJjbGUsIHJlY3RhbmdsZSwgYW5kIHJlZ3VsYXIgcG9seWdvbnMnLFxyXG4gICAgICBzaGFwZXMsXHJcbiAgICAgIGJvdW5kaW5nQm94OiB7IHg6IDIwLCB5OiAyMCwgd2lkdGg6IDQ2MCwgaGVpZ2h0OiA2MCB9XHJcbiAgICB9O1xyXG4gIH1cclxuXHJcbiAgLyoqXHJcbiAgICogQ3JlYXRlIGZsb3djaGFydCBlbGVtZW50cyBjb2xsZWN0aW9uXHJcbiAgICovXHJcbiAgc3RhdGljIGNyZWF0ZUZsb3djaGFydEVsZW1lbnRzKG9wdGlvbnM/OiBQYXJ0aWFsPEJhc2VTaGFwZU9wdGlvbnM+KTogU2hhcGVDb2xsZWN0aW9uIHtcclxuICAgIGNvbnN0IHNoYXBlczogU3ZnQW55RWxlbWVudFtdID0gW1xyXG4gICAgICAvLyBTdGFydC9FbmQgKFJvdW5kZWQgUmVjdGFuZ2xlKVxyXG4gICAgICBCYXNpY1NoYXBlR2VuZXJhdG9yLmNyZWF0ZVJlY3Qoe1xyXG4gICAgICAgIHg6IDIwLFxyXG4gICAgICAgIHk6IDIwLFxyXG4gICAgICAgIHdpZHRoOiAxMDAsXHJcbiAgICAgICAgaGVpZ2h0OiA0MCxcclxuICAgICAgICByeDogMjAsXHJcbiAgICAgICAgcnk6IDIwLFxyXG4gICAgICAgIGZpbGw6ICdsaWdodGJsdWUnLFxyXG4gICAgICAgIHN0cm9rZTogJ25hdnknLFxyXG4gICAgICAgIHN0cm9rZVdpZHRoOiAyLFxyXG4gICAgICAgIC4uLm9wdGlvbnNcclxuICAgICAgfSksXHJcbiAgICAgIFxyXG4gICAgICAvLyBQcm9jZXNzIChSZWN0YW5nbGUpXHJcbiAgICAgIEJhc2ljU2hhcGVHZW5lcmF0b3IuY3JlYXRlUmVjdCh7XHJcbiAgICAgICAgeDogMTUwLFxyXG4gICAgICAgIHk6IDIwLFxyXG4gICAgICAgIHdpZHRoOiAxMDAsXHJcbiAgICAgICAgaGVpZ2h0OiA0MCxcclxuICAgICAgICBmaWxsOiAnbGlnaHRncmVlbicsXHJcbiAgICAgICAgc3Ryb2tlOiAnZGFya2dyZWVuJyxcclxuICAgICAgICBzdHJva2VXaWR0aDogMixcclxuICAgICAgICAuLi5vcHRpb25zXHJcbiAgICAgIH0pLFxyXG4gICAgICBcclxuICAgICAgLy8gRGVjaXNpb24gKERpYW1vbmQpXHJcbiAgICAgIEJhc2ljU2hhcGVHZW5lcmF0b3IuY3JlYXRlUmVndWxhclBvbHlnb24oMzQwLCA0MCwgMzAsIDQsIHtcclxuICAgICAgICBmaWxsOiAnbGlnaHR5ZWxsb3cnLFxyXG4gICAgICAgIHN0cm9rZTogJ29yYW5nZScsXHJcbiAgICAgICAgc3Ryb2tlV2lkdGg6IDIsXHJcbiAgICAgICAgLi4ub3B0aW9uc1xyXG4gICAgICB9KSxcclxuICAgICAgXHJcbiAgICAgIC8vIERvY3VtZW50IChSZWN0YW5nbGUgd2l0aCB3YXZlIGJvdHRvbSlcclxuICAgICAgQmFzaWNTaGFwZUdlbmVyYXRvci5jcmVhdGVSZWN0KHtcclxuICAgICAgICB4OiA0MDAsXHJcbiAgICAgICAgeTogMjAsXHJcbiAgICAgICAgd2lkdGg6IDgwLFxyXG4gICAgICAgIGhlaWdodDogNDAsXHJcbiAgICAgICAgZmlsbDogJ2xpZ2h0Y29yYWwnLFxyXG4gICAgICAgIHN0cm9rZTogJ2RhcmtyZWQnLFxyXG4gICAgICAgIHN0cm9rZVdpZHRoOiAyLFxyXG4gICAgICAgIC4uLm9wdGlvbnNcclxuICAgICAgfSksXHJcbiAgICAgIFxyXG4gICAgICAvLyBBcnJvdyAocG9pbnRpbmcgcmlnaHQpXHJcbiAgICAgIEJhc2ljU2hhcGVHZW5lcmF0b3IuY3JlYXRlUG9seWdvbihbXHJcbiAgICAgICAgeyB4OiA1MjAsIHk6IDIwIH0sXHJcbiAgICAgICAgeyB4OiA1ODAsIHk6IDIwIH0sXHJcbiAgICAgICAgeyB4OiA2MDAsIHk6IDQwIH0sXHJcbiAgICAgICAgeyB4OiA1ODAsIHk6IDYwIH0sXHJcbiAgICAgICAgeyB4OiA1MjAsIHk6IDYwIH0sXHJcbiAgICAgICAgeyB4OiA1NDAsIHk6IDQwIH1cclxuICAgICAgXSwge1xyXG4gICAgICAgIGZpbGw6ICdsaWdodGdyYXknLFxyXG4gICAgICAgIHN0cm9rZTogJ2JsYWNrJyxcclxuICAgICAgICBzdHJva2VXaWR0aDogMixcclxuICAgICAgICAuLi5vcHRpb25zXHJcbiAgICAgIH0pXHJcbiAgICBdO1xyXG5cclxuICAgIHJldHVybiB7XHJcbiAgICAgIG5hbWU6ICdGbG93Y2hhcnQgRWxlbWVudHMnLFxyXG4gICAgICBkZXNjcmlwdGlvbjogJ0NvbW1vbiBmbG93Y2hhcnQgc3ltYm9scyBpbmNsdWRpbmcgc3RhcnQvZW5kLCBwcm9jZXNzLCBkZWNpc2lvbiwgYW5kIGNvbm5lY3RvciBzaGFwZXMnLFxyXG4gICAgICBzaGFwZXMsXHJcbiAgICAgIGJvdW5kaW5nQm94OiB7IHg6IDIwLCB5OiAyMCwgd2lkdGg6IDU4MCwgaGVpZ2h0OiA0MCB9XHJcbiAgICB9O1xyXG4gIH1cclxuXHJcbiAgLyoqXHJcbiAgICogQ3JlYXRlIGFycm93IGNvbGxlY3Rpb25cclxuICAgKi9cclxuICBzdGF0aWMgY3JlYXRlQXJyb3dzKG9wdGlvbnM/OiBQYXJ0aWFsPEJhc2VTaGFwZU9wdGlvbnM+KTogU2hhcGVDb2xsZWN0aW9uIHtcclxuICAgIGNvbnN0IHNoYXBlczogU3ZnQW55RWxlbWVudFtdID0gW1xyXG4gICAgICAvLyBSaWdodCBhcnJvd1xyXG4gICAgICBCYXNpY1NoYXBlR2VuZXJhdG9yLmNyZWF0ZVBvbHlnb24oW1xyXG4gICAgICAgIHsgeDogMjAsIHk6IDMwIH0sXHJcbiAgICAgICAgeyB4OiA2MCwgeTogMzAgfSxcclxuICAgICAgICB7IHg6IDYwLCB5OiAyMCB9LFxyXG4gICAgICAgIHsgeDogODAsIHk6IDQwIH0sXHJcbiAgICAgICAgeyB4OiA2MCwgeTogNjAgfSxcclxuICAgICAgICB7IHg6IDYwLCB5OiA1MCB9LFxyXG4gICAgICAgIHsgeDogMjAsIHk6IDUwIH1cclxuICAgICAgXSwge1xyXG4gICAgICAgIGZpbGw6ICdibGFjaycsXHJcbiAgICAgICAgLi4ub3B0aW9uc1xyXG4gICAgICB9KSxcclxuICAgICAgXHJcbiAgICAgIC8vIExlZnQgYXJyb3dcclxuICAgICAgQmFzaWNTaGFwZUdlbmVyYXRvci5jcmVhdGVQb2x5Z29uKFtcclxuICAgICAgICB7IHg6IDEyMCwgeTogMzAgfSxcclxuICAgICAgICB7IHg6IDE2MCwgeTogMzAgfSxcclxuICAgICAgICB7IHg6IDE2MCwgeTogMjAgfSxcclxuICAgICAgICB7IHg6IDE4MCwgeTogNDAgfSxcclxuICAgICAgICB7IHg6IDE2MCwgeTogNjAgfSxcclxuICAgICAgICB7IHg6IDE2MCwgeTogNTAgfSxcclxuICAgICAgICB7IHg6IDEyMCwgeTogNTAgfSxcclxuICAgICAgICB7IHg6IDEwMCwgeTogNDAgfVxyXG4gICAgICBdLCB7XHJcbiAgICAgICAgZmlsbDogJ2JsYWNrJyxcclxuICAgICAgICAuLi5vcHRpb25zXHJcbiAgICAgIH0pLFxyXG4gICAgICBcclxuICAgICAgLy8gVXAgYXJyb3dcclxuICAgICAgQmFzaWNTaGFwZUdlbmVyYXRvci5jcmVhdGVQb2x5Z29uKFtcclxuICAgICAgICB7IHg6IDIzMCwgeTogNjAgfSxcclxuICAgICAgICB7IHg6IDIzMCwgeTogMzAgfSxcclxuICAgICAgICB7IHg6IDIyMCwgeTogMzAgfSxcclxuICAgICAgICB7IHg6IDI0MCwgeTogMTAgfSxcclxuICAgICAgICB7IHg6IDI2MCwgeTogMzAgfSxcclxuICAgICAgICB7IHg6IDI1MCwgeTogMzAgfSxcclxuICAgICAgICB7IHg6IDI1MCwgeTogNjAgfVxyXG4gICAgICBdLCB7XHJcbiAgICAgICAgZmlsbDogJ2JsYWNrJyxcclxuICAgICAgICAuLi5vcHRpb25zXHJcbiAgICAgIH0pLFxyXG4gICAgICBcclxuICAgICAgLy8gRG93biBhcnJvd1xyXG4gICAgICBCYXNpY1NoYXBlR2VuZXJhdG9yLmNyZWF0ZVBvbHlnb24oW1xyXG4gICAgICAgIHsgeDogMzAwLCB5OiAyMCB9LFxyXG4gICAgICAgIHsgeDogMzAwLCB5OiA1MCB9LFxyXG4gICAgICAgIHsgeDogMjkwLCB5OiA1MCB9LFxyXG4gICAgICAgIHsgeDogMzEwLCB5OiA3MCB9LFxyXG4gICAgICAgIHsgeDogMzMwLCB5OiA1MCB9LFxyXG4gICAgICAgIHsgeDogMzIwLCB5OiA1MCB9LFxyXG4gICAgICAgIHsgeDogMzIwLCB5OiAyMCB9XHJcbiAgICAgIF0sIHtcclxuICAgICAgICBmaWxsOiAnYmxhY2snLFxyXG4gICAgICAgIC4uLm9wdGlvbnNcclxuICAgICAgfSlcclxuICAgIF07XHJcblxyXG4gICAgcmV0dXJuIHtcclxuICAgICAgbmFtZTogJ0Fycm93cycsXHJcbiAgICAgIGRlc2NyaXB0aW9uOiAnRGlyZWN0aW9uYWwgYXJyb3dzIHBvaW50aW5nIHVwLCBkb3duLCBsZWZ0LCBhbmQgcmlnaHQnLFxyXG4gICAgICBzaGFwZXMsXHJcbiAgICAgIGJvdW5kaW5nQm94OiB7IHg6IDIwLCB5OiAxMCwgd2lkdGg6IDMxMCwgaGVpZ2h0OiA2MCB9XHJcbiAgICB9O1xyXG4gIH1cclxuXHJcbiAgLyoqXHJcbiAgICogQ3JlYXRlIHN0YXIgY29sbGVjdGlvblxyXG4gICAqL1xyXG4gIHN0YXRpYyBjcmVhdGVTdGFycyhvcHRpb25zPzogUGFydGlhbDxCYXNlU2hhcGVPcHRpb25zPik6IFNoYXBlQ29sbGVjdGlvbiB7XHJcbiAgICBjb25zdCBzaGFwZXM6IFN2Z0FueUVsZW1lbnRbXSA9IFtcclxuICAgICAgLy8gNS1wb2ludCBzdGFyXHJcbiAgICAgIEJhc2ljU2hhcGVHZW5lcmF0b3IuY3JlYXRlU3Rhcig1MCwgNTAsIDMwLCAxNSwgNSwge1xyXG4gICAgICAgIGZpbGw6ICdnb2xkJyxcclxuICAgICAgICBzdHJva2U6ICdvcmFuZ2UnLFxyXG4gICAgICAgIHN0cm9rZVdpZHRoOiAyLFxyXG4gICAgICAgIC4uLm9wdGlvbnNcclxuICAgICAgfSksXHJcbiAgICAgIFxyXG4gICAgICAvLyA2LXBvaW50IHN0YXJcclxuICAgICAgQmFzaWNTaGFwZUdlbmVyYXRvci5jcmVhdGVTdGFyKDE1MCwgNTAsIDMwLCAxNSwgNiwge1xyXG4gICAgICAgIGZpbGw6ICdzaWx2ZXInLFxyXG4gICAgICAgIHN0cm9rZTogJ2dyYXknLFxyXG4gICAgICAgIHN0cm9rZVdpZHRoOiAyLFxyXG4gICAgICAgIC4uLm9wdGlvbnNcclxuICAgICAgfSksXHJcbiAgICAgIFxyXG4gICAgICAvLyA4LXBvaW50IHN0YXJcclxuICAgICAgQmFzaWNTaGFwZUdlbmVyYXRvci5jcmVhdGVTdGFyKDI1MCwgNTAsIDMwLCAxNSwgOCwge1xyXG4gICAgICAgIGZpbGw6ICdsaWdodGJsdWUnLFxyXG4gICAgICAgIHN0cm9rZTogJ2JsdWUnLFxyXG4gICAgICAgIHN0cm9rZVdpZHRoOiAyLFxyXG4gICAgICAgIC4uLm9wdGlvbnNcclxuICAgICAgfSlcclxuICAgIF07XHJcblxyXG4gICAgcmV0dXJuIHtcclxuICAgICAgbmFtZTogJ1N0YXJzJyxcclxuICAgICAgZGVzY3JpcHRpb246ICdTdGFyIHNoYXBlcyB3aXRoIGRpZmZlcmVudCBudW1iZXJzIG9mIHBvaW50cycsXHJcbiAgICAgIHNoYXBlcyxcclxuICAgICAgYm91bmRpbmdCb3g6IHsgeDogMjAsIHk6IDIwLCB3aWR0aDogMjYwLCBoZWlnaHQ6IDYwIH1cclxuICAgIH07XHJcbiAgfVxyXG5cclxuICAvKipcclxuICAgKiBDcmVhdGUgYmFzaWMgVUkgZWxlbWVudHMgY29sbGVjdGlvblxyXG4gICAqL1xyXG4gIHN0YXRpYyBjcmVhdGVVSUVsZW1lbnRzKG9wdGlvbnM/OiBQYXJ0aWFsPEJhc2VTaGFwZU9wdGlvbnM+KTogU2hhcGVDb2xsZWN0aW9uIHtcclxuICAgIGNvbnN0IHNoYXBlczogU3ZnQW55RWxlbWVudFtdID0gW1xyXG4gICAgICAvLyBCdXR0b25cclxuICAgICAgQmFzaWNTaGFwZUdlbmVyYXRvci5jcmVhdGVSZWN0KHtcclxuICAgICAgICB4OiAyMCxcclxuICAgICAgICB5OiAyMCxcclxuICAgICAgICB3aWR0aDogODAsXHJcbiAgICAgICAgaGVpZ2h0OiAzMCxcclxuICAgICAgICByeDogNSxcclxuICAgICAgICByeTogNSxcclxuICAgICAgICBmaWxsOiAnbGlnaHRibHVlJyxcclxuICAgICAgICBzdHJva2U6ICdibHVlJyxcclxuICAgICAgICBzdHJva2VXaWR0aDogMSxcclxuICAgICAgICAuLi5vcHRpb25zXHJcbiAgICAgIH0pLFxyXG4gICAgICBcclxuICAgICAgLy8gVGV4dCBmaWVsZFxyXG4gICAgICBCYXNpY1NoYXBlR2VuZXJhdG9yLmNyZWF0ZVJlY3Qoe1xyXG4gICAgICAgIHg6IDEyMCxcclxuICAgICAgICB5OiAyMCxcclxuICAgICAgICB3aWR0aDogMTIwLFxyXG4gICAgICAgIGhlaWdodDogMzAsXHJcbiAgICAgICAgZmlsbDogJ3doaXRlJyxcclxuICAgICAgICBzdHJva2U6ICdncmF5JyxcclxuICAgICAgICBzdHJva2VXaWR0aDogMSxcclxuICAgICAgICAuLi5vcHRpb25zXHJcbiAgICAgIH0pLFxyXG4gICAgICBcclxuICAgICAgLy8gQ2hlY2tib3ggKHVuY2hlY2tlZClcclxuICAgICAgQmFzaWNTaGFwZUdlbmVyYXRvci5jcmVhdGVSZWN0KHtcclxuICAgICAgICB4OiAyNjAsXHJcbiAgICAgICAgeTogMjUsXHJcbiAgICAgICAgd2lkdGg6IDIwLFxyXG4gICAgICAgIGhlaWdodDogMjAsXHJcbiAgICAgICAgZmlsbDogJ3doaXRlJyxcclxuICAgICAgICBzdHJva2U6ICdibGFjaycsXHJcbiAgICAgICAgc3Ryb2tlV2lkdGg6IDEsXHJcbiAgICAgICAgLi4ub3B0aW9uc1xyXG4gICAgICB9KSxcclxuICAgICAgXHJcbiAgICAgIC8vIFJhZGlvIGJ1dHRvbiAodW5jaGVja2VkKVxyXG4gICAgICBCYXNpY1NoYXBlR2VuZXJhdG9yLmNyZWF0ZUNpcmNsZSh7XHJcbiAgICAgICAgY3g6IDMxMCxcclxuICAgICAgICBjeTogMzUsXHJcbiAgICAgICAgcjogMTAsXHJcbiAgICAgICAgZmlsbDogJ3doaXRlJyxcclxuICAgICAgICBzdHJva2U6ICdibGFjaycsXHJcbiAgICAgICAgc3Ryb2tlV2lkdGg6IDEsXHJcbiAgICAgICAgLi4ub3B0aW9uc1xyXG4gICAgICB9KSxcclxuICAgICAgXHJcbiAgICAgIC8vIFByb2dyZXNzIGJhciBiYWNrZ3JvdW5kXHJcbiAgICAgIEJhc2ljU2hhcGVHZW5lcmF0b3IuY3JlYXRlUmVjdCh7XHJcbiAgICAgICAgeDogMzQwLFxyXG4gICAgICAgIHk6IDMwLFxyXG4gICAgICAgIHdpZHRoOiAxMDAsXHJcbiAgICAgICAgaGVpZ2h0OiAxMCxcclxuICAgICAgICByeDogNSxcclxuICAgICAgICByeTogNSxcclxuICAgICAgICBmaWxsOiAnbGlnaHRncmF5JyxcclxuICAgICAgICBzdHJva2U6ICdncmF5JyxcclxuICAgICAgICBzdHJva2VXaWR0aDogMSxcclxuICAgICAgICAuLi5vcHRpb25zXHJcbiAgICAgIH0pLFxyXG4gICAgICBcclxuICAgICAgLy8gUHJvZ3Jlc3MgYmFyIGZpbGxcclxuICAgICAgQmFzaWNTaGFwZUdlbmVyYXRvci5jcmVhdGVSZWN0KHtcclxuICAgICAgICB4OiAzNDIsXHJcbiAgICAgICAgeTogMzIsXHJcbiAgICAgICAgd2lkdGg6IDYwLFxyXG4gICAgICAgIGhlaWdodDogNixcclxuICAgICAgICByeDogMyxcclxuICAgICAgICByeTogMyxcclxuICAgICAgICBmaWxsOiAnYmx1ZScsXHJcbiAgICAgICAgLi4ub3B0aW9uc1xyXG4gICAgICB9KVxyXG4gICAgXTtcclxuXHJcbiAgICByZXR1cm4ge1xyXG4gICAgICBuYW1lOiAnVUkgRWxlbWVudHMnLFxyXG4gICAgICBkZXNjcmlwdGlvbjogJ0Jhc2ljIHVzZXIgaW50ZXJmYWNlIGVsZW1lbnRzIGxpa2UgYnV0dG9ucywgdGV4dCBmaWVsZHMsIGFuZCBmb3JtIGNvbnRyb2xzJyxcclxuICAgICAgc2hhcGVzLFxyXG4gICAgICBib3VuZGluZ0JveDogeyB4OiAyMCwgeTogMjAsIHdpZHRoOiA0MjAsIGhlaWdodDogMzAgfVxyXG4gICAgfTtcclxuICB9XHJcblxyXG4gIC8qKlxyXG4gICAqIENyZWF0ZSBncmlkIHBhdHRlcm5cclxuICAgKi9cclxuICBzdGF0aWMgY3JlYXRlR3JpZChcclxuICAgIHN0YXJ0WDogbnVtYmVyLFxyXG4gICAgc3RhcnRZOiBudW1iZXIsXHJcbiAgICBjZWxsV2lkdGg6IG51bWJlcixcclxuICAgIGNlbGxIZWlnaHQ6IG51bWJlcixcclxuICAgIHJvd3M6IG51bWJlcixcclxuICAgIGNvbHM6IG51bWJlcixcclxuICAgIG9wdGlvbnM/OiBQYXJ0aWFsPEJhc2VTaGFwZU9wdGlvbnM+XHJcbiAgKTogU2hhcGVDb2xsZWN0aW9uIHtcclxuICAgIGNvbnN0IHNoYXBlczogU3ZnQW55RWxlbWVudFtdID0gW107XHJcbiAgICBcclxuICAgIC8vIENyZWF0ZSBob3Jpem9udGFsIGxpbmVzXHJcbiAgICBmb3IgKGxldCBpID0gMDsgaSA8PSByb3dzOyBpKyspIHtcclxuICAgICAgY29uc3QgeSA9IHN0YXJ0WSArIGkgKiBjZWxsSGVpZ2h0O1xyXG4gICAgICBzaGFwZXMucHVzaChCYXNpY1NoYXBlR2VuZXJhdG9yLmNyZWF0ZUxpbmUoe1xyXG4gICAgICAgIHgxOiBzdGFydFgsXHJcbiAgICAgICAgeTE6IHksXHJcbiAgICAgICAgeDI6IHN0YXJ0WCArIGNvbHMgKiBjZWxsV2lkdGgsXHJcbiAgICAgICAgeTI6IHksXHJcbiAgICAgICAgc3Ryb2tlOiAnbGlnaHRncmF5JyxcclxuICAgICAgICBzdHJva2VXaWR0aDogMSxcclxuICAgICAgICAuLi5vcHRpb25zXHJcbiAgICAgIH0pKTtcclxuICAgIH1cclxuICAgIFxyXG4gICAgLy8gQ3JlYXRlIHZlcnRpY2FsIGxpbmVzXHJcbiAgICBmb3IgKGxldCBqID0gMDsgaiA8PSBjb2xzOyBqKyspIHtcclxuICAgICAgY29uc3QgeCA9IHN0YXJ0WCArIGogKiBjZWxsV2lkdGg7XHJcbiAgICAgIHNoYXBlcy5wdXNoKEJhc2ljU2hhcGVHZW5lcmF0b3IuY3JlYXRlTGluZSh7XHJcbiAgICAgICAgeDE6IHgsXHJcbiAgICAgICAgeTE6IHN0YXJ0WSxcclxuICAgICAgICB4MjogeCxcclxuICAgICAgICB5Mjogc3RhcnRZICsgcm93cyAqIGNlbGxIZWlnaHQsXHJcbiAgICAgICAgc3Ryb2tlOiAnbGlnaHRncmF5JyxcclxuICAgICAgICBzdHJva2VXaWR0aDogMSxcclxuICAgICAgICAuLi5vcHRpb25zXHJcbiAgICAgIH0pKTtcclxuICAgIH1cclxuXHJcbiAgICByZXR1cm4ge1xyXG4gICAgICBuYW1lOiAnR3JpZCcsXHJcbiAgICAgIGRlc2NyaXB0aW9uOiBgJHtyb3dzfXgke2NvbHN9IGdyaWQgcGF0dGVybmAsXHJcbiAgICAgIHNoYXBlcyxcclxuICAgICAgYm91bmRpbmdCb3g6IHtcclxuICAgICAgICB4OiBzdGFydFgsXHJcbiAgICAgICAgeTogc3RhcnRZLFxyXG4gICAgICAgIHdpZHRoOiBjb2xzICogY2VsbFdpZHRoLFxyXG4gICAgICAgIGhlaWdodDogcm93cyAqIGNlbGxIZWlnaHRcclxuICAgICAgfVxyXG4gICAgfTtcclxuICB9XHJcblxyXG4gIC8qKlxyXG4gICAqIENyZWF0ZSBjb29yZGluYXRlIHN5c3RlbSAoYXhlcylcclxuICAgKi9cclxuICBzdGF0aWMgY3JlYXRlQ29vcmRpbmF0ZVN5c3RlbShcclxuICAgIGNlbnRlclg6IG51bWJlcixcclxuICAgIGNlbnRlclk6IG51bWJlcixcclxuICAgIHdpZHRoOiBudW1iZXIsXHJcbiAgICBoZWlnaHQ6IG51bWJlcixcclxuICAgIG9wdGlvbnM/OiBQYXJ0aWFsPEJhc2VTaGFwZU9wdGlvbnM+XHJcbiAgKTogU2hhcGVDb2xsZWN0aW9uIHtcclxuICAgIGNvbnN0IHNoYXBlczogU3ZnQW55RWxlbWVudFtdID0gW1xyXG4gICAgICAvLyBYLWF4aXNcclxuICAgICAgQmFzaWNTaGFwZUdlbmVyYXRvci5jcmVhdGVMaW5lKHtcclxuICAgICAgICB4MTogY2VudGVyWCAtIHdpZHRoIC8gMixcclxuICAgICAgICB5MTogY2VudGVyWSxcclxuICAgICAgICB4MjogY2VudGVyWCArIHdpZHRoIC8gMixcclxuICAgICAgICB5MjogY2VudGVyWSxcclxuICAgICAgICBzdHJva2U6ICdibGFjaycsXHJcbiAgICAgICAgc3Ryb2tlV2lkdGg6IDIsXHJcbiAgICAgICAgLi4ub3B0aW9uc1xyXG4gICAgICB9KSxcclxuICAgICAgXHJcbiAgICAgIC8vIFktYXhpc1xyXG4gICAgICBCYXNpY1NoYXBlR2VuZXJhdG9yLmNyZWF0ZUxpbmUoe1xyXG4gICAgICAgIHgxOiBjZW50ZXJYLFxyXG4gICAgICAgIHkxOiBjZW50ZXJZIC0gaGVpZ2h0IC8gMixcclxuICAgICAgICB4MjogY2VudGVyWCxcclxuICAgICAgICB5MjogY2VudGVyWSArIGhlaWdodCAvIDIsXHJcbiAgICAgICAgc3Ryb2tlOiAnYmxhY2snLFxyXG4gICAgICAgIHN0cm9rZVdpZHRoOiAyLFxyXG4gICAgICAgIC4uLm9wdGlvbnNcclxuICAgICAgfSksXHJcbiAgICAgIFxyXG4gICAgICAvLyBYLWF4aXMgYXJyb3dcclxuICAgICAgQmFzaWNTaGFwZUdlbmVyYXRvci5jcmVhdGVQb2x5Z29uKFtcclxuICAgICAgICB7IHg6IGNlbnRlclggKyB3aWR0aCAvIDIsIHk6IGNlbnRlclkgfSxcclxuICAgICAgICB7IHg6IGNlbnRlclggKyB3aWR0aCAvIDIgLSAxMCwgeTogY2VudGVyWSAtIDUgfSxcclxuICAgICAgICB7IHg6IGNlbnRlclggKyB3aWR0aCAvIDIgLSAxMCwgeTogY2VudGVyWSArIDUgfVxyXG4gICAgICBdLCB7XHJcbiAgICAgICAgZmlsbDogJ2JsYWNrJyxcclxuICAgICAgICAuLi5vcHRpb25zXHJcbiAgICAgIH0pLFxyXG4gICAgICBcclxuICAgICAgLy8gWS1heGlzIGFycm93XHJcbiAgICAgIEJhc2ljU2hhcGVHZW5lcmF0b3IuY3JlYXRlUG9seWdvbihbXHJcbiAgICAgICAgeyB4OiBjZW50ZXJYLCB5OiBjZW50ZXJZIC0gaGVpZ2h0IC8gMiB9LFxyXG4gICAgICAgIHsgeDogY2VudGVyWCAtIDUsIHk6IGNlbnRlclkgLSBoZWlnaHQgLyAyICsgMTAgfSxcclxuICAgICAgICB7IHg6IGNlbnRlclggKyA1LCB5OiBjZW50ZXJZIC0gaGVpZ2h0IC8gMiArIDEwIH1cclxuICAgICAgXSwge1xyXG4gICAgICAgIGZpbGw6ICdibGFjaycsXHJcbiAgICAgICAgLi4ub3B0aW9uc1xyXG4gICAgICB9KVxyXG4gICAgXTtcclxuXHJcbiAgICByZXR1cm4ge1xyXG4gICAgICBuYW1lOiAnQ29vcmRpbmF0ZSBTeXN0ZW0nLFxyXG4gICAgICBkZXNjcmlwdGlvbjogJ1gtWSBjb29yZGluYXRlIHN5c3RlbSB3aXRoIGF4ZXMgYW5kIGFycm93cycsXHJcbiAgICAgIHNoYXBlcyxcclxuICAgICAgYm91bmRpbmdCb3g6IHtcclxuICAgICAgICB4OiBjZW50ZXJYIC0gd2lkdGggLyAyLFxyXG4gICAgICAgIHk6IGNlbnRlclkgLSBoZWlnaHQgLyAyLFxyXG4gICAgICAgIHdpZHRoLFxyXG4gICAgICAgIGhlaWdodFxyXG4gICAgICB9XHJcbiAgICB9O1xyXG4gIH1cclxuXHJcbiAgLyoqXHJcbiAgICogR2V0IGFsbCBhdmFpbGFibGUgY29sbGVjdGlvbnNcclxuICAgKi9cclxuICBzdGF0aWMgZ2V0QWxsQ29sbGVjdGlvbnMoKTogc3RyaW5nW10ge1xyXG4gICAgcmV0dXJuIFtcclxuICAgICAgJ2dlb21ldHJpY1NoYXBlcycsXHJcbiAgICAgICdmbG93Y2hhcnRFbGVtZW50cycsXHJcbiAgICAgICdhcnJvd3MnLFxyXG4gICAgICAnc3RhcnMnLFxyXG4gICAgICAndWlFbGVtZW50cydcclxuICAgIF07XHJcbiAgfVxyXG5cclxuICAvKipcclxuICAgKiBHZXQgY29sbGVjdGlvbiBieSBuYW1lXHJcbiAgICovXHJcbiAgc3RhdGljIGdldENvbGxlY3Rpb24obmFtZTogc3RyaW5nLCBvcHRpb25zPzogUGFydGlhbDxCYXNlU2hhcGVPcHRpb25zPik6IFNoYXBlQ29sbGVjdGlvbiB8IG51bGwge1xyXG4gICAgc3dpdGNoIChuYW1lLnRvTG93ZXJDYXNlKCkpIHtcclxuICAgICAgY2FzZSAnZ2VvbWV0cmljJzpcclxuICAgICAgY2FzZSAnZ2VvbWV0cmljc2hhcGVzJzpcclxuICAgICAgICByZXR1cm4gdGhpcy5jcmVhdGVHZW9tZXRyaWNTaGFwZXMob3B0aW9ucyk7XHJcbiAgICAgIGNhc2UgJ2Zsb3djaGFydCc6XHJcbiAgICAgIGNhc2UgJ2Zsb3djaGFydGVsZW1lbnRzJzpcclxuICAgICAgICByZXR1cm4gdGhpcy5jcmVhdGVGbG93Y2hhcnRFbGVtZW50cyhvcHRpb25zKTtcclxuICAgICAgY2FzZSAnYXJyb3dzJzpcclxuICAgICAgICByZXR1cm4gdGhpcy5jcmVhdGVBcnJvd3Mob3B0aW9ucyk7XHJcbiAgICAgIGNhc2UgJ3N0YXJzJzpcclxuICAgICAgICByZXR1cm4gdGhpcy5jcmVhdGVTdGFycyhvcHRpb25zKTtcclxuICAgICAgY2FzZSAndWknOlxyXG4gICAgICBjYXNlICd1aWVsZW1lbnRzJzpcclxuICAgICAgICByZXR1cm4gdGhpcy5jcmVhdGVVSUVsZW1lbnRzKG9wdGlvbnMpO1xyXG4gICAgICBkZWZhdWx0OlxyXG4gICAgICAgIHJldHVybiBudWxsO1xyXG4gICAgfVxyXG4gIH1cclxufVxyXG4iXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7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

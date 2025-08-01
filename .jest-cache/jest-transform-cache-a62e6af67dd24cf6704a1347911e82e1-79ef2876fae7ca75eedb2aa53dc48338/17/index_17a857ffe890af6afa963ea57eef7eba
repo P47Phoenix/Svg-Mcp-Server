@@ -1,0 +1,48 @@
+a808ec91acbe8b888d0ba892e5cb68a6
+/* istanbul ignore next */
+function cov_1c7zw2f75x() {
+  var path = "C:\\GitHub\\Svg-Mcp-Server\\src\\core\\shapes\\index.ts";
+  var hash = "327a8dbe74dee4c9af2112bb6c3a7bfbe2d973db";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "C:\\GitHub\\Svg-Mcp-Server\\src\\core\\shapes\\index.ts",
+    statementMap: {},
+    fnMap: {},
+    branchMap: {},
+    s: {},
+    f: {},
+    b: {},
+    inputSourceMap: {
+      file: "C:\\GitHub\\Svg-Mcp-Server\\src\\core\\shapes\\index.ts",
+      mappings: "AAAA;;;;GAIG;AAEH,OAAO,EAAE,mBAAmB,EAAE,MAAM,0BAA0B,CAAC;AAC/D,OAAO,EAAE,gBAAgB,EAAE,MAAM,uBAAuB,CAAC",
+      names: [],
+      sources: ["C:\\GitHub\\Svg-Mcp-Server\\src\\core\\shapes\\index.ts"],
+      sourcesContent: ["/**\r\n * SVG Shape Generators - Main Export\r\n * \r\n * Exports all shape generation utilities and collections\r\n */\r\n\r\nexport { BasicShapeGenerator } from './BasicShapeGenerator.js';\r\nexport { ShapeCollections } from './ShapeCollections.js';\r\n\r\nexport type {\r\n  BaseShapeOptions,\r\n  CircleOptions,\r\n  RectOptions,\r\n  LineOptions,\r\n  TextOptions,\r\n  GroupOptions,\r\n  PathOptions,\r\n  PathCommand\r\n} from './BasicShapeGenerator.js';\r\n\r\nexport type {\r\n  ShapeCollection\r\n} from './ShapeCollections.js';\r\n"],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "327a8dbe74dee4c9af2112bb6c3a7bfbe2d973db"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1c7zw2f75x = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1c7zw2f75x();
+/**
+ * SVG Shape Generators - Main Export
+ *
+ * Exports all shape generation utilities and collections
+ */
+export { BasicShapeGenerator } from './BasicShapeGenerator.js';
+export { ShapeCollections } from './ShapeCollections.js';
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJCYXNpY1NoYXBlR2VuZXJhdG9yIiwiU2hhcGVDb2xsZWN0aW9ucyJdLCJzb3VyY2VzIjpbIkM6XFxHaXRIdWJcXFN2Zy1NY3AtU2VydmVyXFxzcmNcXGNvcmVcXHNoYXBlc1xcaW5kZXgudHMiXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXHJcbiAqIFNWRyBTaGFwZSBHZW5lcmF0b3JzIC0gTWFpbiBFeHBvcnRcclxuICogXHJcbiAqIEV4cG9ydHMgYWxsIHNoYXBlIGdlbmVyYXRpb24gdXRpbGl0aWVzIGFuZCBjb2xsZWN0aW9uc1xyXG4gKi9cclxuXHJcbmV4cG9ydCB7IEJhc2ljU2hhcGVHZW5lcmF0b3IgfSBmcm9tICcuL0Jhc2ljU2hhcGVHZW5lcmF0b3IuanMnO1xyXG5leHBvcnQgeyBTaGFwZUNvbGxlY3Rpb25zIH0gZnJvbSAnLi9TaGFwZUNvbGxlY3Rpb25zLmpzJztcclxuXHJcbmV4cG9ydCB0eXBlIHtcclxuICBCYXNlU2hhcGVPcHRpb25zLFxyXG4gIENpcmNsZU9wdGlvbnMsXHJcbiAgUmVjdE9wdGlvbnMsXHJcbiAgTGluZU9wdGlvbnMsXHJcbiAgVGV4dE9wdGlvbnMsXHJcbiAgR3JvdXBPcHRpb25zLFxyXG4gIFBhdGhPcHRpb25zLFxyXG4gIFBhdGhDb21tYW5kXHJcbn0gZnJvbSAnLi9CYXNpY1NoYXBlR2VuZXJhdG9yLmpzJztcclxuXHJcbmV4cG9ydCB0eXBlIHtcclxuICBTaGFwZUNvbGxlY3Rpb25cclxufSBmcm9tICcuL1NoYXBlQ29sbGVjdGlvbnMuanMnO1xyXG4iXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OztBQUFBOzs7OztBQU1BLFNBQVNBLG1CQUFtQixRQUFRLDBCQUEwQjtBQUM5RCxTQUFTQyxnQkFBZ0IsUUFBUSx1QkFBdUIiLCJpZ25vcmVMaXN0IjpbXX0=

@@ -4437,6 +4437,764 @@ var SvgDocumentProcessor = class {
   }
 };
 
+// src/core/shapes/BasicShapeGenerator.ts
+var BasicShapeGenerator = class {
+  /**
+   * Create a circle element
+   */
+  static createCircle(options) {
+    if (options.r <= 0) {
+      throw new Error("Circle radius must be positive");
+    }
+    return {
+      type: "circle",
+      cx: options.cx,
+      cy: options.cy,
+      r: options.r,
+      ...options.fill && { fill: options.fill },
+      ...options.stroke && { stroke: options.stroke },
+      ...options.strokeWidth && { "stroke-width": options.strokeWidth },
+      ...options.opacity && { opacity: options.opacity },
+      ...options.id && { id: options.id },
+      ...options.className && { class: options.className }
+    };
+  }
+  /**
+   * Create a rectangle element
+   */
+  static createRect(options) {
+    if (options.width <= 0 || options.height <= 0) {
+      throw new Error("Rectangle width and height must be positive");
+    }
+    return {
+      type: "rect",
+      x: options.x,
+      y: options.y,
+      width: options.width,
+      height: options.height,
+      ...options.rx && { rx: options.rx },
+      ...options.ry && { ry: options.ry },
+      ...options.fill && { fill: options.fill },
+      ...options.stroke && { stroke: options.stroke },
+      ...options.strokeWidth && { "stroke-width": options.strokeWidth },
+      ...options.opacity && { opacity: options.opacity },
+      ...options.id && { id: options.id },
+      ...options.className && { class: options.className }
+    };
+  }
+  /**
+   * Create a line element
+   */
+  static createLine(options) {
+    return {
+      type: "line",
+      x1: options.x1,
+      y1: options.y1,
+      x2: options.x2,
+      y2: options.y2,
+      ...options.stroke && { stroke: options.stroke },
+      ...options.strokeWidth && { "stroke-width": options.strokeWidth },
+      ...options.opacity && { opacity: options.opacity },
+      ...options.id && { id: options.id },
+      ...options.className && { class: options.className }
+    };
+  }
+  /**
+   * Create a text element
+   */
+  static createText(options) {
+    if (!options.content.trim()) {
+      throw new Error("Text content cannot be empty");
+    }
+    return {
+      type: "text",
+      x: options.x,
+      y: options.y,
+      content: options.content,
+      ...options.fontSize && { "font-size": options.fontSize },
+      ...options.fontFamily && { "font-family": options.fontFamily },
+      ...options.textAnchor && { "text-anchor": options.textAnchor },
+      ...options.fill && { fill: options.fill },
+      ...options.stroke && { stroke: options.stroke },
+      ...options.strokeWidth && { "stroke-width": options.strokeWidth },
+      ...options.opacity && { opacity: options.opacity },
+      ...options.id && { id: options.id },
+      ...options.className && { class: options.className }
+    };
+  }
+  /**
+   * Create a group element
+   */
+  static createGroup(options) {
+    if (!options.children || options.children.length === 0) {
+      throw new Error("Group must contain at least one child element");
+    }
+    return {
+      type: "group",
+      children: options.children,
+      ...options.transform && { transform: options.transform },
+      ...options.fill && { fill: options.fill },
+      ...options.stroke && { stroke: options.stroke },
+      ...options.strokeWidth && { "stroke-width": options.strokeWidth },
+      ...options.opacity && { opacity: options.opacity },
+      ...options.id && { id: options.id },
+      ...options.className && { class: options.className }
+    };
+  }
+  /**
+   * Create a path element from commands
+   */
+  static createPath(options) {
+    if (!options.commands || options.commands.length === 0) {
+      throw new Error("Path must contain at least one command");
+    }
+    const d = this.pathCommandsToString(options.commands);
+    return {
+      type: "path",
+      d,
+      ...options.fill && { fill: options.fill },
+      ...options.stroke && { stroke: options.stroke },
+      ...options.strokeWidth && { "stroke-width": options.strokeWidth },
+      ...options.opacity && { opacity: options.opacity },
+      ...options.id && { id: options.id },
+      ...options.className && { class: options.className }
+    };
+  }
+  // Preset shape generators for common patterns
+  /**
+   * Create a circle at origin with default styling
+   */
+  static createDefaultCircle(radius) {
+    return this.createCircle({
+      cx: 0,
+      cy: 0,
+      r: radius,
+      fill: "none",
+      stroke: "black",
+      strokeWidth: 1
+    });
+  }
+  /**
+   * Create a rectangle at origin with default styling
+   */
+  static createDefaultRect(width, height) {
+    return this.createRect({
+      x: 0,
+      y: 0,
+      width,
+      height,
+      fill: "none",
+      stroke: "black",
+      strokeWidth: 1
+    });
+  }
+  /**
+   * Create a horizontal line
+   */
+  static createHorizontalLine(x1, x2, y) {
+    return this.createLine({
+      x1,
+      y1: y,
+      x2,
+      y2: y,
+      stroke: "black",
+      strokeWidth: 1
+    });
+  }
+  /**
+   * Create a vertical line
+   */
+  static createVerticalLine(x, y1, y2) {
+    return this.createLine({
+      x1: x,
+      y1,
+      x2: x,
+      y2,
+      stroke: "black",
+      strokeWidth: 1
+    });
+  }
+  /**
+   * Create a square (special case of rectangle)
+   */
+  static createSquare(x, y, size, options) {
+    return this.createRect({
+      x,
+      y,
+      width: size,
+      height: size,
+      fill: "none",
+      stroke: "black",
+      strokeWidth: 1,
+      ...options
+    });
+  }
+  /**
+   * Create an ellipse using path commands
+   */
+  static createEllipse(cx, cy, rx, ry, options) {
+    const commands = [
+      { type: "M", x: cx - rx, y: cy },
+      { type: "A", rx, ry, rotation: 0, largeArc: false, sweep: false, x: cx + rx, y: cy },
+      { type: "A", rx, ry, rotation: 0, largeArc: false, sweep: false, x: cx - rx, y: cy },
+      { type: "Z" }
+    ];
+    return this.createPath({
+      commands,
+      fill: "none",
+      stroke: "black",
+      strokeWidth: 1,
+      ...options
+    });
+  }
+  /**
+   * Create a polygon using path commands
+   */
+  static createPolygon(points, options) {
+    if (points.length < 3) {
+      throw new Error("Polygon must have at least 3 points");
+    }
+    const firstPoint = points[0];
+    if (!firstPoint) {
+      throw new Error("Polygon must have valid points");
+    }
+    const commands = [
+      { type: "M", x: firstPoint.x, y: firstPoint.y },
+      ...points.slice(1).map((point) => ({ type: "L", x: point.x, y: point.y })),
+      { type: "Z" }
+    ];
+    return this.createPath({
+      commands,
+      fill: "none",
+      stroke: "black",
+      strokeWidth: 1,
+      ...options
+    });
+  }
+  /**
+   * Create a regular polygon (e.g., triangle, pentagon, hexagon)
+   */
+  static createRegularPolygon(cx, cy, radius, sides, options) {
+    if (sides < 3) {
+      throw new Error("Polygon must have at least 3 sides");
+    }
+    const points = [];
+    const angleStep = 2 * Math.PI / sides;
+    for (let i = 0; i < sides; i++) {
+      const angle = i * angleStep - Math.PI / 2;
+      points.push({
+        x: cx + radius * Math.cos(angle),
+        y: cy + radius * Math.sin(angle)
+      });
+    }
+    return this.createPolygon(points, options);
+  }
+  /**
+   * Create a star shape
+   */
+  static createStar(cx, cy, outerRadius, innerRadius, points, options) {
+    if (points < 3) {
+      throw new Error("Star must have at least 3 points");
+    }
+    const starPoints = [];
+    const angleStep = Math.PI / points;
+    for (let i = 0; i < points * 2; i++) {
+      const angle = i * angleStep - Math.PI / 2;
+      const radius = i % 2 === 0 ? outerRadius : innerRadius;
+      starPoints.push({
+        x: cx + radius * Math.cos(angle),
+        y: cy + radius * Math.sin(angle)
+      });
+    }
+    return this.createPolygon(starPoints, options);
+  }
+  // Helper methods
+  /**
+   * Convert path commands to SVG path string
+   */
+  static pathCommandsToString(commands) {
+    return commands.map((cmd) => {
+      switch (cmd.type) {
+        case "M":
+          return `M ${cmd.x} ${cmd.y}`;
+        case "L":
+          return `L ${cmd.x} ${cmd.y}`;
+        case "C":
+          return `C ${cmd.x1} ${cmd.y1} ${cmd.x2} ${cmd.y2} ${cmd.x} ${cmd.y}`;
+        case "Q":
+          return `Q ${cmd.x1} ${cmd.y1} ${cmd.x} ${cmd.y}`;
+        case "A":
+          return `A ${cmd.rx} ${cmd.ry} ${cmd.rotation} ${cmd.largeArc ? 1 : 0} ${cmd.sweep ? 1 : 0} ${cmd.x} ${cmd.y}`;
+        case "Z":
+          return "Z";
+        default:
+          throw new Error(`Unknown path command type: ${cmd.type}`);
+      }
+    }).join(" ");
+  }
+  /**
+   * Calculate bounding box for a set of points
+   */
+  static calculateBoundingBox(points) {
+    if (points.length === 0) {
+      return { x: 0, y: 0, width: 0, height: 0 };
+    }
+    const xs = points.map((p) => p.x);
+    const ys = points.map((p) => p.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    return {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY
+    };
+  }
+};
+
+// src/core/shapes/ShapeCollections.ts
+var ShapeCollections = class {
+  /**
+   * Create basic geometric shapes collection
+   */
+  static createGeometricShapes(options) {
+    const shapes = [
+      // Circle
+      BasicShapeGenerator.createCircle({
+        cx: 50,
+        cy: 50,
+        r: 30,
+        fill: "none",
+        stroke: "black",
+        strokeWidth: 2,
+        ...options
+      }),
+      // Rectangle
+      BasicShapeGenerator.createRect({
+        x: 120,
+        y: 20,
+        width: 60,
+        height: 60,
+        fill: "none",
+        stroke: "black",
+        strokeWidth: 2,
+        ...options
+      }),
+      // Triangle
+      BasicShapeGenerator.createRegularPolygon(250, 50, 30, 3, {
+        fill: "none",
+        stroke: "black",
+        strokeWidth: 2,
+        ...options
+      }),
+      // Pentagon
+      BasicShapeGenerator.createRegularPolygon(350, 50, 30, 5, {
+        fill: "none",
+        stroke: "black",
+        strokeWidth: 2,
+        ...options
+      }),
+      // Hexagon
+      BasicShapeGenerator.createRegularPolygon(450, 50, 30, 6, {
+        fill: "none",
+        stroke: "black",
+        strokeWidth: 2,
+        ...options
+      })
+    ];
+    return {
+      name: "Geometric Shapes",
+      description: "Basic geometric shapes including circle, rectangle, and regular polygons",
+      shapes,
+      boundingBox: { x: 20, y: 20, width: 460, height: 60 }
+    };
+  }
+  /**
+   * Create flowchart elements collection
+   */
+  static createFlowchartElements(options) {
+    const shapes = [
+      // Start/End (Rounded Rectangle)
+      BasicShapeGenerator.createRect({
+        x: 20,
+        y: 20,
+        width: 100,
+        height: 40,
+        rx: 20,
+        ry: 20,
+        fill: "lightblue",
+        stroke: "navy",
+        strokeWidth: 2,
+        ...options
+      }),
+      // Process (Rectangle)
+      BasicShapeGenerator.createRect({
+        x: 150,
+        y: 20,
+        width: 100,
+        height: 40,
+        fill: "lightgreen",
+        stroke: "darkgreen",
+        strokeWidth: 2,
+        ...options
+      }),
+      // Decision (Diamond)
+      BasicShapeGenerator.createRegularPolygon(340, 40, 30, 4, {
+        fill: "lightyellow",
+        stroke: "orange",
+        strokeWidth: 2,
+        ...options
+      }),
+      // Document (Rectangle with wave bottom)
+      BasicShapeGenerator.createRect({
+        x: 400,
+        y: 20,
+        width: 80,
+        height: 40,
+        fill: "lightcoral",
+        stroke: "darkred",
+        strokeWidth: 2,
+        ...options
+      }),
+      // Arrow (pointing right)
+      BasicShapeGenerator.createPolygon([
+        { x: 520, y: 20 },
+        { x: 580, y: 20 },
+        { x: 600, y: 40 },
+        { x: 580, y: 60 },
+        { x: 520, y: 60 },
+        { x: 540, y: 40 }
+      ], {
+        fill: "lightgray",
+        stroke: "black",
+        strokeWidth: 2,
+        ...options
+      })
+    ];
+    return {
+      name: "Flowchart Elements",
+      description: "Common flowchart symbols including start/end, process, decision, and connector shapes",
+      shapes,
+      boundingBox: { x: 20, y: 20, width: 580, height: 40 }
+    };
+  }
+  /**
+   * Create arrow collection
+   */
+  static createArrows(options) {
+    const shapes = [
+      // Right arrow
+      BasicShapeGenerator.createPolygon([
+        { x: 20, y: 30 },
+        { x: 60, y: 30 },
+        { x: 60, y: 20 },
+        { x: 80, y: 40 },
+        { x: 60, y: 60 },
+        { x: 60, y: 50 },
+        { x: 20, y: 50 }
+      ], {
+        fill: "black",
+        ...options
+      }),
+      // Left arrow
+      BasicShapeGenerator.createPolygon([
+        { x: 120, y: 30 },
+        { x: 160, y: 30 },
+        { x: 160, y: 20 },
+        { x: 180, y: 40 },
+        { x: 160, y: 60 },
+        { x: 160, y: 50 },
+        { x: 120, y: 50 },
+        { x: 100, y: 40 }
+      ], {
+        fill: "black",
+        ...options
+      }),
+      // Up arrow
+      BasicShapeGenerator.createPolygon([
+        { x: 230, y: 60 },
+        { x: 230, y: 30 },
+        { x: 220, y: 30 },
+        { x: 240, y: 10 },
+        { x: 260, y: 30 },
+        { x: 250, y: 30 },
+        { x: 250, y: 60 }
+      ], {
+        fill: "black",
+        ...options
+      }),
+      // Down arrow
+      BasicShapeGenerator.createPolygon([
+        { x: 300, y: 20 },
+        { x: 300, y: 50 },
+        { x: 290, y: 50 },
+        { x: 310, y: 70 },
+        { x: 330, y: 50 },
+        { x: 320, y: 50 },
+        { x: 320, y: 20 }
+      ], {
+        fill: "black",
+        ...options
+      })
+    ];
+    return {
+      name: "Arrows",
+      description: "Directional arrows pointing up, down, left, and right",
+      shapes,
+      boundingBox: { x: 20, y: 10, width: 310, height: 60 }
+    };
+  }
+  /**
+   * Create star collection
+   */
+  static createStars(options) {
+    const shapes = [
+      // 5-point star
+      BasicShapeGenerator.createStar(50, 50, 30, 15, 5, {
+        fill: "gold",
+        stroke: "orange",
+        strokeWidth: 2,
+        ...options
+      }),
+      // 6-point star
+      BasicShapeGenerator.createStar(150, 50, 30, 15, 6, {
+        fill: "silver",
+        stroke: "gray",
+        strokeWidth: 2,
+        ...options
+      }),
+      // 8-point star
+      BasicShapeGenerator.createStar(250, 50, 30, 15, 8, {
+        fill: "lightblue",
+        stroke: "blue",
+        strokeWidth: 2,
+        ...options
+      })
+    ];
+    return {
+      name: "Stars",
+      description: "Star shapes with different numbers of points",
+      shapes,
+      boundingBox: { x: 20, y: 20, width: 260, height: 60 }
+    };
+  }
+  /**
+   * Create basic UI elements collection
+   */
+  static createUIElements(options) {
+    const shapes = [
+      // Button
+      BasicShapeGenerator.createRect({
+        x: 20,
+        y: 20,
+        width: 80,
+        height: 30,
+        rx: 5,
+        ry: 5,
+        fill: "lightblue",
+        stroke: "blue",
+        strokeWidth: 1,
+        ...options
+      }),
+      // Text field
+      BasicShapeGenerator.createRect({
+        x: 120,
+        y: 20,
+        width: 120,
+        height: 30,
+        fill: "white",
+        stroke: "gray",
+        strokeWidth: 1,
+        ...options
+      }),
+      // Checkbox (unchecked)
+      BasicShapeGenerator.createRect({
+        x: 260,
+        y: 25,
+        width: 20,
+        height: 20,
+        fill: "white",
+        stroke: "black",
+        strokeWidth: 1,
+        ...options
+      }),
+      // Radio button (unchecked)
+      BasicShapeGenerator.createCircle({
+        cx: 310,
+        cy: 35,
+        r: 10,
+        fill: "white",
+        stroke: "black",
+        strokeWidth: 1,
+        ...options
+      }),
+      // Progress bar background
+      BasicShapeGenerator.createRect({
+        x: 340,
+        y: 30,
+        width: 100,
+        height: 10,
+        rx: 5,
+        ry: 5,
+        fill: "lightgray",
+        stroke: "gray",
+        strokeWidth: 1,
+        ...options
+      }),
+      // Progress bar fill
+      BasicShapeGenerator.createRect({
+        x: 342,
+        y: 32,
+        width: 60,
+        height: 6,
+        rx: 3,
+        ry: 3,
+        fill: "blue",
+        ...options
+      })
+    ];
+    return {
+      name: "UI Elements",
+      description: "Basic user interface elements like buttons, text fields, and form controls",
+      shapes,
+      boundingBox: { x: 20, y: 20, width: 420, height: 30 }
+    };
+  }
+  /**
+   * Create grid pattern
+   */
+  static createGrid(startX, startY, cellWidth, cellHeight, rows, cols, options) {
+    const shapes = [];
+    for (let i = 0; i <= rows; i++) {
+      const y = startY + i * cellHeight;
+      shapes.push(BasicShapeGenerator.createLine({
+        x1: startX,
+        y1: y,
+        x2: startX + cols * cellWidth,
+        y2: y,
+        stroke: "lightgray",
+        strokeWidth: 1,
+        ...options
+      }));
+    }
+    for (let j = 0; j <= cols; j++) {
+      const x = startX + j * cellWidth;
+      shapes.push(BasicShapeGenerator.createLine({
+        x1: x,
+        y1: startY,
+        x2: x,
+        y2: startY + rows * cellHeight,
+        stroke: "lightgray",
+        strokeWidth: 1,
+        ...options
+      }));
+    }
+    return {
+      name: "Grid",
+      description: `${rows}x${cols} grid pattern`,
+      shapes,
+      boundingBox: {
+        x: startX,
+        y: startY,
+        width: cols * cellWidth,
+        height: rows * cellHeight
+      }
+    };
+  }
+  /**
+   * Create coordinate system (axes)
+   */
+  static createCoordinateSystem(centerX, centerY, width, height, options) {
+    const shapes = [
+      // X-axis
+      BasicShapeGenerator.createLine({
+        x1: centerX - width / 2,
+        y1: centerY,
+        x2: centerX + width / 2,
+        y2: centerY,
+        stroke: "black",
+        strokeWidth: 2,
+        ...options
+      }),
+      // Y-axis
+      BasicShapeGenerator.createLine({
+        x1: centerX,
+        y1: centerY - height / 2,
+        x2: centerX,
+        y2: centerY + height / 2,
+        stroke: "black",
+        strokeWidth: 2,
+        ...options
+      }),
+      // X-axis arrow
+      BasicShapeGenerator.createPolygon([
+        { x: centerX + width / 2, y: centerY },
+        { x: centerX + width / 2 - 10, y: centerY - 5 },
+        { x: centerX + width / 2 - 10, y: centerY + 5 }
+      ], {
+        fill: "black",
+        ...options
+      }),
+      // Y-axis arrow
+      BasicShapeGenerator.createPolygon([
+        { x: centerX, y: centerY - height / 2 },
+        { x: centerX - 5, y: centerY - height / 2 + 10 },
+        { x: centerX + 5, y: centerY - height / 2 + 10 }
+      ], {
+        fill: "black",
+        ...options
+      })
+    ];
+    return {
+      name: "Coordinate System",
+      description: "X-Y coordinate system with axes and arrows",
+      shapes,
+      boundingBox: {
+        x: centerX - width / 2,
+        y: centerY - height / 2,
+        width,
+        height
+      }
+    };
+  }
+  /**
+   * Get all available collections
+   */
+  static getAllCollections() {
+    return [
+      "geometricShapes",
+      "flowchartElements",
+      "arrows",
+      "stars",
+      "uiElements"
+    ];
+  }
+  /**
+   * Get collection by name
+   */
+  static getCollection(name, options) {
+    switch (name.toLowerCase()) {
+      case "geometric":
+      case "geometricshapes":
+        return this.createGeometricShapes(options);
+      case "flowchart":
+      case "flowchartelements":
+        return this.createFlowchartElements(options);
+      case "arrows":
+        return this.createArrows(options);
+      case "stars":
+        return this.createStars(options);
+      case "ui":
+      case "uielements":
+        return this.createUIElements(options);
+      default:
+        return null;
+    }
+  }
+};
+
 // src/server/SvgMcpServer.ts
 var SvgMcpServer = class extends FastMCP {
   svgRenderer;
@@ -4604,6 +5362,148 @@ var SvgMcpServer = class extends FastMCP {
       }
     });
     this.addTool({
+      name: "create_shape",
+      description: "Create individual SVG shapes using the shape generator",
+      parameters: external_exports.object({
+        type: external_exports.enum(["circle", "rect", "line", "text", "group", "path", "ellipse", "polygon", "star"]).describe("Type of shape to create"),
+        options: external_exports.any().describe("Shape-specific options object"),
+        includeDocument: external_exports.boolean().default(false).describe("Whether to wrap the shape in a complete SVG document")
+      }),
+      execute: async (args) => {
+        const { type, options, includeDocument } = args;
+        try {
+          logger.info("Creating shape", { type, includeDocument });
+          let shape;
+          switch (type) {
+            case "circle":
+              shape = BasicShapeGenerator.createCircle(options);
+              break;
+            case "rect":
+              shape = BasicShapeGenerator.createRect(options);
+              break;
+            case "line":
+              shape = BasicShapeGenerator.createLine(options);
+              break;
+            case "text":
+              shape = BasicShapeGenerator.createText(options);
+              break;
+            case "group":
+              shape = BasicShapeGenerator.createGroup(options);
+              break;
+            case "path":
+              shape = BasicShapeGenerator.createPath(options);
+              break;
+            case "ellipse":
+              if (!options.cx || !options.cy || !options.rx || !options.ry) {
+                throw new Error("Ellipse requires cx, cy, rx, and ry parameters");
+              }
+              shape = BasicShapeGenerator.createEllipse(options.cx, options.cy, options.rx, options.ry, options);
+              break;
+            case "polygon":
+              if (!options.points || !Array.isArray(options.points)) {
+                throw new Error("Polygon requires points array parameter");
+              }
+              shape = BasicShapeGenerator.createPolygon(options.points, options);
+              break;
+            case "star":
+              if (!options.cx || !options.cy || !options.outerRadius || !options.innerRadius || !options.points) {
+                throw new Error("Star requires cx, cy, outerRadius, innerRadius, and points parameters");
+              }
+              shape = BasicShapeGenerator.createStar(options.cx, options.cy, options.outerRadius, options.innerRadius, options.points, options);
+              break;
+            default:
+              throw new Error(`Unknown shape type: ${type}`);
+          }
+          let result = {
+            shape,
+            svg: null,
+            document: null
+          };
+          if (includeDocument) {
+            const boundingBox = this.calculateShapeBoundingBox(shape);
+            const padding = 10;
+            const spec = {
+              viewBox: {
+                x: boundingBox.x - padding,
+                y: boundingBox.y - padding,
+                width: boundingBox.width + 2 * padding,
+                height: boundingBox.height + 2 * padding
+              },
+              elements: [shape],
+              title: `${type.charAt(0).toUpperCase() + type.slice(1)} Shape`,
+              description: `Generated ${type} shape`
+            };
+            const processResult = await this.documentProcessor.processDocument(spec);
+            result.svg = processResult.svg;
+            result.document = processResult.document;
+          }
+          logger.info("Shape created successfully", { type, shapeType: shape.type });
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify(result, null, 2)
+            }]
+          };
+        } catch (error) {
+          logger.error("Shape creation failed", { error, type, options });
+          throw new Error(`Shape creation failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+        }
+      }
+    });
+    this.addTool({
+      name: "create_shape_collection",
+      description: "Create pre-defined collections of shapes for common use cases",
+      parameters: external_exports.object({
+        collection: external_exports.enum(["geometric", "flowchart", "arrows", "stars", "ui"]).describe("Type of shape collection to create"),
+        options: external_exports.any().optional().describe("Optional styling options to apply to all shapes"),
+        includeDocument: external_exports.boolean().default(true).describe("Whether to wrap the collection in a complete SVG document")
+      }),
+      execute: async (args) => {
+        const { collection, options, includeDocument } = args;
+        try {
+          logger.info("Creating shape collection", { collection, includeDocument });
+          const shapeCollection = ShapeCollections.getCollection(collection, options);
+          if (!shapeCollection) {
+            throw new Error(`Unknown collection type: ${collection}`);
+          }
+          let result = {
+            collection: shapeCollection,
+            svg: null,
+            document: null
+          };
+          if (includeDocument) {
+            const spec = {
+              viewBox: {
+                x: shapeCollection.boundingBox.x - 10,
+                y: shapeCollection.boundingBox.y - 10,
+                width: shapeCollection.boundingBox.width + 20,
+                height: shapeCollection.boundingBox.height + 20
+              },
+              elements: shapeCollection.shapes,
+              title: shapeCollection.name,
+              description: shapeCollection.description
+            };
+            const processResult = await this.documentProcessor.processDocument(spec);
+            result.svg = processResult.svg;
+            result.document = processResult.document;
+          }
+          logger.info("Shape collection created successfully", {
+            collection,
+            shapeCount: shapeCollection.shapes.length
+          });
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify(result, null, 2)
+            }]
+          };
+        } catch (error) {
+          logger.error("Shape collection creation failed", { error, collection, options });
+          throw new Error(`Shape collection creation failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+        }
+      }
+    });
+    this.addTool({
       name: "health_check",
       description: "Check the health and status of the SVG MCP server",
       execute: async () => {
@@ -4729,6 +5629,46 @@ var SvgMcpServer = class extends FastMCP {
         };
       }
     });
+  }
+  /**
+   * Calculate bounding box for a shape element
+   */
+  calculateShapeBoundingBox(shape) {
+    switch (shape.type) {
+      case "circle":
+        return {
+          x: shape.cx - shape.r,
+          y: shape.cy - shape.r,
+          width: shape.r * 2,
+          height: shape.r * 2
+        };
+      case "rect":
+        return {
+          x: shape.x,
+          y: shape.y,
+          width: shape.width,
+          height: shape.height
+        };
+      case "line":
+        return {
+          x: Math.min(shape.x1, shape.x2),
+          y: Math.min(shape.y1, shape.y2),
+          width: Math.abs(shape.x2 - shape.x1),
+          height: Math.abs(shape.y2 - shape.y1)
+        };
+      case "text":
+        const fontSize = shape["font-size"] || 16;
+        const textLength = shape.content.length;
+        return {
+          x: shape.x,
+          y: shape.y - fontSize,
+          width: textLength * fontSize * 0.6,
+          // Rough estimate
+          height: fontSize
+        };
+      default:
+        return { x: 0, y: 0, width: 100, height: 100 };
+    }
   }
   async start() {
     logger.info("Starting SVG MCP Server", {

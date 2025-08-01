@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { logger } from '../utils/logger.js';
 import { SvgRenderer } from '../core/SvgRenderer.js';
 import { SvgDocumentProcessor, SvgDocumentSpec } from '../core/SvgDocumentProcessor.js';
+import { BasicShapeGenerator, ShapeCollections } from '../core/shapes/index.js';
 import { SvgValidationError } from '../types/svg.js';
 
 export interface SvgMcpServerConfig {
@@ -213,6 +214,172 @@ export class SvgMcpServer extends FastMCP {
       }
     });
 
+    // Tool: Create Shape
+    this.addTool({
+      name: 'create_shape',
+      description: 'Create individual SVG shapes using the shape generator',
+      parameters: z.object({
+        type: z.enum(['circle', 'rect', 'line', 'text', 'group', 'path', 'ellipse', 'polygon', 'star']).describe('Type of shape to create'),
+        options: z.any().describe('Shape-specific options object'),
+        includeDocument: z.boolean().default(false).describe('Whether to wrap the shape in a complete SVG document')
+      }),
+      execute: async (args) => {
+        const { type, options, includeDocument } = args;
+
+        try {
+          logger.info('Creating shape', { type, includeDocument });
+          
+          let shape;
+          
+          switch (type) {
+            case 'circle':
+              shape = BasicShapeGenerator.createCircle(options);
+              break;
+            case 'rect':
+              shape = BasicShapeGenerator.createRect(options);
+              break;
+            case 'line':
+              shape = BasicShapeGenerator.createLine(options);
+              break;
+            case 'text':
+              shape = BasicShapeGenerator.createText(options);
+              break;
+            case 'group':
+              shape = BasicShapeGenerator.createGroup(options);
+              break;
+            case 'path':
+              shape = BasicShapeGenerator.createPath(options);
+              break;
+            case 'ellipse':
+              if (!options.cx || !options.cy || !options.rx || !options.ry) {
+                throw new Error('Ellipse requires cx, cy, rx, and ry parameters');
+              }
+              shape = BasicShapeGenerator.createEllipse(options.cx, options.cy, options.rx, options.ry, options);
+              break;
+            case 'polygon':
+              if (!options.points || !Array.isArray(options.points)) {
+                throw new Error('Polygon requires points array parameter');
+              }
+              shape = BasicShapeGenerator.createPolygon(options.points, options);
+              break;
+            case 'star':
+              if (!options.cx || !options.cy || !options.outerRadius || !options.innerRadius || !options.points) {
+                throw new Error('Star requires cx, cy, outerRadius, innerRadius, and points parameters');
+              }
+              shape = BasicShapeGenerator.createStar(options.cx, options.cy, options.outerRadius, options.innerRadius, options.points, options);
+              break;
+            default:
+              throw new Error(`Unknown shape type: ${type}`);
+          }
+
+          let result = {
+            shape,
+            svg: null as string | null,
+            document: null as any
+          };
+
+          if (includeDocument) {
+            // Calculate appropriate viewBox based on shape
+            const boundingBox = this.calculateShapeBoundingBox(shape);
+            const padding = 10;
+            
+            const spec: SvgDocumentSpec = {
+              viewBox: {
+                x: boundingBox.x - padding,
+                y: boundingBox.y - padding,
+                width: boundingBox.width + 2 * padding,
+                height: boundingBox.height + 2 * padding
+              },
+              elements: [shape],
+              title: `${type.charAt(0).toUpperCase() + type.slice(1)} Shape`,
+              description: `Generated ${type} shape`
+            };
+
+            const processResult = await this.documentProcessor.processDocument(spec);
+            result.svg = processResult.svg;
+            result.document = processResult.document;
+          }
+
+          logger.info('Shape created successfully', { type, shapeType: shape.type });
+
+          return {
+            content: [{
+              type: 'text',
+              text: JSON.stringify(result, null, 2)
+            }]
+          };
+
+        } catch (error) {
+          logger.error('Shape creation failed', { error, type, options });
+          throw new Error(`Shape creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    });
+
+    // Tool: Create Shape Collection
+    this.addTool({
+      name: 'create_shape_collection',
+      description: 'Create pre-defined collections of shapes for common use cases',
+      parameters: z.object({
+        collection: z.enum(['geometric', 'flowchart', 'arrows', 'stars', 'ui']).describe('Type of shape collection to create'),
+        options: z.any().optional().describe('Optional styling options to apply to all shapes'),
+        includeDocument: z.boolean().default(true).describe('Whether to wrap the collection in a complete SVG document')
+      }),
+      execute: async (args) => {
+        const { collection, options, includeDocument } = args;
+
+        try {
+          logger.info('Creating shape collection', { collection, includeDocument });
+          
+          const shapeCollection = ShapeCollections.getCollection(collection, options);
+          
+          if (!shapeCollection) {
+            throw new Error(`Unknown collection type: ${collection}`);
+          }
+
+          let result = {
+            collection: shapeCollection,
+            svg: null as string | null,
+            document: null as any
+          };
+
+          if (includeDocument) {
+            const spec: SvgDocumentSpec = {
+              viewBox: {
+                x: shapeCollection.boundingBox.x - 10,
+                y: shapeCollection.boundingBox.y - 10,
+                width: shapeCollection.boundingBox.width + 20,
+                height: shapeCollection.boundingBox.height + 20
+              },
+              elements: shapeCollection.shapes,
+              title: shapeCollection.name,
+              description: shapeCollection.description
+            };
+
+            const processResult = await this.documentProcessor.processDocument(spec);
+            result.svg = processResult.svg;
+            result.document = processResult.document;
+          }
+
+          logger.info('Shape collection created successfully', { 
+            collection, 
+            shapeCount: shapeCollection.shapes.length 
+          });
+
+          return {
+            content: [{
+              type: 'text',
+              text: JSON.stringify(result, null, 2)
+            }]
+          };
+
+        } catch (error) {
+          logger.error('Shape collection creation failed', { error, collection, options });
+          throw new Error(`Shape collection creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    });
+
     // Tool: Health Check
     this.addTool({
       name: 'health_check',
@@ -347,6 +514,48 @@ export class SvgMcpServer extends FastMCP {
         };
       }
     });
+  }
+
+  /**
+   * Calculate bounding box for a shape element
+   */
+  private calculateShapeBoundingBox(shape: any): { x: number; y: number; width: number; height: number } {
+    switch (shape.type) {
+      case 'circle':
+        return {
+          x: shape.cx - shape.r,
+          y: shape.cy - shape.r,
+          width: shape.r * 2,
+          height: shape.r * 2
+        };
+      case 'rect':
+        return {
+          x: shape.x,
+          y: shape.y,
+          width: shape.width,
+          height: shape.height
+        };
+      case 'line':
+        return {
+          x: Math.min(shape.x1, shape.x2),
+          y: Math.min(shape.y1, shape.y2),
+          width: Math.abs(shape.x2 - shape.x1),
+          height: Math.abs(shape.y2 - shape.y1)
+        };
+      case 'text':
+        // Estimate text bounding box
+        const fontSize = shape['font-size'] || 16;
+        const textLength = shape.content.length;
+        return {
+          x: shape.x,
+          y: shape.y - fontSize,
+          width: textLength * fontSize * 0.6, // Rough estimate
+          height: fontSize
+        };
+      default:
+        // Default bounding box for unknown shapes
+        return { x: 0, y: 0, width: 100, height: 100 };
+    }
   }
 
   async start(): Promise<void> {
