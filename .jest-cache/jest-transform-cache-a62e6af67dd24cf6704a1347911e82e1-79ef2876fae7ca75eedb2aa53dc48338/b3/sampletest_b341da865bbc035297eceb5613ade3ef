@@ -1,0 +1,24 @@
+42fab275759f5446fe3f8cbb8dabb71f
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+// Sample test to verify Jest configuration
+const globals_1 = require("@jest/globals");
+(0, globals_1.describe)('Jest Configuration', () => {
+    (0, globals_1.it)('should run TypeScript tests', () => {
+        const result = 'TypeScript + Jest is working';
+        (0, globals_1.expect)(result).toBe('TypeScript + Jest is working');
+    });
+    (0, globals_1.it)('should support async tests', async () => {
+        const promise = Promise.resolve('async works');
+        await (0, globals_1.expect)(promise).resolves.toBe('async works');
+    });
+    (0, globals_1.it)('should have custom SVG matcher', () => {
+        const validSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"></svg>';
+        (0, globals_1.expect)(validSvg).toBeValidSvg();
+    });
+    (0, globals_1.it)('should have mocked console methods', () => {
+        console.log('test message');
+        (0, globals_1.expect)(console.log).toHaveBeenCalledWith('test message');
+    });
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiQzpcXEdpdEh1YlxcU3ZnLU1jcC1TZXJ2ZXJcXHRlc3RzXFxzYW1wbGUudGVzdC50cyIsIm1hcHBpbmdzIjoiOztBQUFBLDJDQUEyQztBQUMzQywyQ0FBcUQ7QUFFckQsSUFBQSxrQkFBUSxFQUFDLG9CQUFvQixFQUFFLEdBQUcsRUFBRTtJQUNsQyxJQUFBLFlBQUUsRUFBQyw2QkFBNkIsRUFBRSxHQUFHLEVBQUU7UUFDckMsTUFBTSxNQUFNLEdBQUcsOEJBQThCLENBQUM7UUFDOUMsSUFBQSxnQkFBTSxFQUFDLE1BQU0sQ0FBQyxDQUFDLElBQUksQ0FBQyw4QkFBOEIsQ0FBQyxDQUFDO0lBQ3RELENBQUMsQ0FBQyxDQUFDO0lBRUgsSUFBQSxZQUFFLEVBQUMsNEJBQTRCLEVBQUUsS0FBSyxJQUFJLEVBQUU7UUFDMUMsTUFBTSxPQUFPLEdBQUcsT0FBTyxDQUFDLE9BQU8sQ0FBQyxhQUFhLENBQUMsQ0FBQztRQUMvQyxNQUFNLElBQUEsZ0JBQU0sRUFBQyxPQUFPLENBQUMsQ0FBQyxRQUFRLENBQUMsSUFBSSxDQUFDLGFBQWEsQ0FBQyxDQUFDO0lBQ3JELENBQUMsQ0FBQyxDQUFDO0lBRUgsSUFBQSxZQUFFLEVBQUMsZ0NBQWdDLEVBQUUsR0FBRyxFQUFFO1FBQ3hDLE1BQU0sUUFBUSxHQUFHLHNFQUFzRSxDQUFDO1FBQ3hGLElBQUEsZ0JBQU0sRUFBQyxRQUFRLENBQUMsQ0FBQyxZQUFZLEVBQUUsQ0FBQztJQUNsQyxDQUFDLENBQUMsQ0FBQztJQUVILElBQUEsWUFBRSxFQUFDLG9DQUFvQyxFQUFFLEdBQUcsRUFBRTtRQUM1QyxPQUFPLENBQUMsR0FBRyxDQUFDLGNBQWMsQ0FBQyxDQUFDO1FBQzVCLElBQUEsZ0JBQU0sRUFBQyxPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsb0JBQW9CLENBQUMsY0FBYyxDQUFDLENBQUM7SUFDM0QsQ0FBQyxDQUFDLENBQUM7QUFDTCxDQUFDLENBQUMsQ0FBQyIsIm5hbWVzIjpbXSwic291cmNlcyI6WyJDOlxcR2l0SHViXFxTdmctTWNwLVNlcnZlclxcdGVzdHNcXHNhbXBsZS50ZXN0LnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8vIFNhbXBsZSB0ZXN0IHRvIHZlcmlmeSBKZXN0IGNvbmZpZ3VyYXRpb25cclxuaW1wb3J0IHsgZGVzY3JpYmUsIGl0LCBleHBlY3QgfSBmcm9tICdAamVzdC9nbG9iYWxzJztcclxuXHJcbmRlc2NyaWJlKCdKZXN0IENvbmZpZ3VyYXRpb24nLCAoKSA9PiB7XHJcbiAgaXQoJ3Nob3VsZCBydW4gVHlwZVNjcmlwdCB0ZXN0cycsICgpID0+IHtcclxuICAgIGNvbnN0IHJlc3VsdCA9ICdUeXBlU2NyaXB0ICsgSmVzdCBpcyB3b3JraW5nJztcclxuICAgIGV4cGVjdChyZXN1bHQpLnRvQmUoJ1R5cGVTY3JpcHQgKyBKZXN0IGlzIHdvcmtpbmcnKTtcclxuICB9KTtcclxuXHJcbiAgaXQoJ3Nob3VsZCBzdXBwb3J0IGFzeW5jIHRlc3RzJywgYXN5bmMgKCkgPT4ge1xyXG4gICAgY29uc3QgcHJvbWlzZSA9IFByb21pc2UucmVzb2x2ZSgnYXN5bmMgd29ya3MnKTtcclxuICAgIGF3YWl0IGV4cGVjdChwcm9taXNlKS5yZXNvbHZlcy50b0JlKCdhc3luYyB3b3JrcycpO1xyXG4gIH0pO1xyXG5cclxuICBpdCgnc2hvdWxkIGhhdmUgY3VzdG9tIFNWRyBtYXRjaGVyJywgKCkgPT4ge1xyXG4gICAgY29uc3QgdmFsaWRTdmcgPSAnPHN2ZyB4bWxucz1cImh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnXCIgdmlld0JveD1cIjAgMCAxMDAgMTAwXCI+PC9zdmc+JztcclxuICAgIGV4cGVjdCh2YWxpZFN2ZykudG9CZVZhbGlkU3ZnKCk7XHJcbiAgfSk7XHJcblxyXG4gIGl0KCdzaG91bGQgaGF2ZSBtb2NrZWQgY29uc29sZSBtZXRob2RzJywgKCkgPT4ge1xyXG4gICAgY29uc29sZS5sb2coJ3Rlc3QgbWVzc2FnZScpO1xyXG4gICAgZXhwZWN0KGNvbnNvbGUubG9nKS50b0hhdmVCZWVuQ2FsbGVkV2l0aCgndGVzdCBtZXNzYWdlJyk7XHJcbiAgfSk7XHJcbn0pO1xyXG4iXSwidmVyc2lvbiI6M30=

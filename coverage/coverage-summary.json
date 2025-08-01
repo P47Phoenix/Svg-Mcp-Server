@@ -1,0 +1,5 @@
+{"total": {"lines":{"total":200,"covered":0,"skipped":0,"pct":0},"statements":{"total":203,"covered":0,"skipped":0,"pct":0},"functions":{"total":43,"covered":0,"skipped":0,"pct":0},"branches":{"total":84,"covered":0,"skipped":0,"pct":0},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":100}}
+,"C:\\GitHub\\Svg-Mcp-Server\\src\\core\\SvgRenderer.ts": {"lines":{"total":106,"covered":0,"skipped":0,"pct":0},"functions":{"total":20,"covered":0,"skipped":0,"pct":0},"statements":{"total":108,"covered":0,"skipped":0,"pct":0},"branches":{"total":48,"covered":0,"skipped":0,"pct":0}}
+,"C:\\GitHub\\Svg-Mcp-Server\\src\\server\\SvgMcpServer.ts": {"lines":{"total":67,"covered":0,"skipped":0,"pct":0},"functions":{"total":13,"covered":0,"skipped":0,"pct":0},"statements":{"total":68,"covered":0,"skipped":0,"pct":0},"branches":{"total":27,"covered":0,"skipped":0,"pct":0}}
+,"C:\\GitHub\\Svg-Mcp-Server\\src\\utils\\logger.ts": {"lines":{"total":27,"covered":0,"skipped":0,"pct":0},"functions":{"total":10,"covered":0,"skipped":0,"pct":0},"statements":{"total":27,"covered":0,"skipped":0,"pct":0},"branches":{"total":9,"covered":0,"skipped":0,"pct":0}}
+}
