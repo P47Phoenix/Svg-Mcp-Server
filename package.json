@@ -1,0 +1,79 @@
+{
+  "name": "svg-rfc-mcp-server",
+  "version": "1.0.0",
+  "description": "RFC 7996 compliant SVG generator MCP server",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && esbuild src/index.ts --bundle --platform=node --outfile=dist/server.js --format=esm --external:fastmcp",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "jest",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration", 
+    "test:compliance": "jest tests/compliance",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src",
+    "type-check": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "mcp",
+    "svg", 
+    "rfc7996",
+    "diagram",
+    "generator",
+    "fastmcp",
+    "typescript"
+  ],
+  "author": "SVG MCP Server Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/P47Phoenix/Svg-Mcp-Server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/P47Phoenix/Svg-Mcp-Server/issues"
+  },
+  "homepage": "https://github.com/P47Phoenix/Svg-Mcp-Server#readme",
+  "dependencies": {
+    "fastmcp": "^3.13.0",
+    "zod": "^3.22.0",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/js-yaml": "^4.0.0",
+    "typescript": "^5.3.0",
+    "tsx": "^4.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "prettier": "^3.0.0",
+    "esbuild": "^0.19.0",
+    "rimraf": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": ["<rootDir>/tests"],
+    "testMatch": ["**/*.test.ts"],
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/**/*.d.ts",
+      "!src/index.ts"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html"]
+  }
+}
