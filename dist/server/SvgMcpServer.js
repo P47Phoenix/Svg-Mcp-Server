@@ -8,9 +8,11 @@ import { FastMCP } from 'fastmcp';
 import { z } from 'zod';
 import { logger } from '../utils/logger.js';
 import { SvgRenderer } from '../core/SvgRenderer.js';
-import { ViewBoxSchema, SvgValidationError } from '../types/svg.js';
+import { SvgDocumentProcessor } from '../core/SvgDocumentProcessor.js';
+import { SvgValidationError } from '../types/svg.js';
 export class SvgMcpServer extends FastMCP {
     svgRenderer;
+    documentProcessor;
     config;
     constructor(config) {
         super({
@@ -24,6 +26,7 @@ export class SvgMcpServer extends FastMCP {
             enableDebug: config.enableDebug || false,
         };
         this.svgRenderer = new SvgRenderer();
+        this.documentProcessor = new SvgDocumentProcessor();
         if (this.config.enableDebug) {
             logger.setLogLevel('debug');
         }
@@ -56,35 +59,55 @@ export class SvgMcpServer extends FastMCP {
             execute: async (args) => {
                 const { document, optimize = true, validate = true } = args;
                 try {
-                    logger.debug('Generating SVG document', { document, optimize, validate });
-                    // Validate document if requested
-                    if (validate) {
-                        await this.validateSvgDocument(document);
-                    }
-                    // Generate SVG
-                    const svg = await this.svgRenderer.render(document, {
+                    logger.info('Processing SVG document request', {
+                        elementCount: document.elements?.length,
+                        optimize,
+                        validate
+                    });
+                    // Convert to document specification
+                    const spec = {
+                        viewBox: document.viewBox,
+                        elements: document.elements || [],
+                        ...(document.width !== undefined && { width: document.width }),
+                        ...(document.height !== undefined && { height: document.height }),
+                        ...(document.title && { title: document.title }),
+                        ...(document.description && { description: document.description }),
+                        ...(document.style && { style: document.style }),
                         optimize,
                         validate,
-                    });
+                        generateMetadata: true,
+                    };
+                    // Process document using the document processor
+                    const result = await this.documentProcessor.processDocument(spec);
                     // Check size limits
-                    if (svg.length > this.config.maxSvgSize) {
-                        throw new SvgValidationError(`Generated SVG exceeds maximum size limit of ${this.config.maxSvgSize} characters`);
+                    if (result.svg.length > this.config.maxSvgSize) {
+                        throw new SvgValidationError(`Generated SVG exceeds maximum size limit of ${this.config.maxSvgSize} characters`, [`SVG size: ${result.svg.length}, limit: ${this.config.maxSvgSize}`]);
                     }
-                    logger.info('SVG generated successfully', {
-                        size: svg.length,
-                        elementCount: document.elements.length,
+                    logger.info('SVG document processed successfully', {
+                        size: result.svg.length,
+                        elementCount: result.document.elements.length,
+                        processingTime: result.processingTime,
+                        warnings: result.warnings.length,
+                        errors: result.errors.length,
                     });
                     return {
                         content: [{
                                 type: 'text',
                                 text: JSON.stringify({
-                                    svg,
-                                    size: svg.length,
-                                    elementCount: document.elements.length,
-                                    metadata: {
+                                    svg: result.svg,
+                                    document: result.document,
+                                    metadata: result.metadata,
+                                    processing: {
+                                        time: result.processingTime,
+                                        warnings: result.warnings,
+                                        errors: result.errors,
                                         generated: new Date().toISOString(),
-                                        optimized: optimize,
-                                        validated: validate,
+                                    },
+                                    stats: {
+                                        size: result.svg.length,
+                                        elementCount: result.document.elements.length,
+                                        complexity: result.metadata.complexity,
+                                        features: result.metadata.features,
                                     },
                                 }, null, 2)
                             }]
@@ -117,9 +140,34 @@ export class SvgMcpServer extends FastMCP {
             execute: async (args) => {
                 const { document } = args;
                 try {
-                    logger.debug('Validating SVG document', { document });
-                    const validationResult = await this.validateSvgDocument(document);
-                    logger.info('SVG document validation completed', validationResult);
+                    logger.info('Validating SVG document', {
+                        elementCount: document.elements?.length
+                    });
+                    // Convert to document specification for validation
+                    const spec = {
+                        viewBox: document.viewBox,
+                        elements: document.elements || [],
+                        validate: true,
+                        generateMetadata: true,
+                    };
+                    // Use document processor for comprehensive validation
+                    const result = await this.documentProcessor.processDocument(spec);
+                    const validationResult = {
+                        valid: result.errors.length === 0,
+                        errors: result.errors,
+                        warnings: result.warnings,
+                        metadata: result.metadata,
+                        processingTime: result.processingTime,
+                        compliance: result.metadata.compliance,
+                        accessibility: result.metadata.accessibility,
+                        features: result.metadata.features,
+                        complexity: result.metadata.complexity,
+                    };
+                    logger.info('SVG document validation completed', {
+                        valid: validationResult.valid,
+                        errors: validationResult.errors.length,
+                        warnings: validationResult.warnings.length,
+                    });
                     return {
                         content: [{
                                 type: 'text',
@@ -150,6 +198,10 @@ export class SvgMcpServer extends FastMCP {
                         status: 'operational',
                         capabilities: this.svgRenderer.getCapabilities(),
                     },
+                    processor: {
+                        status: 'operational',
+                        statistics: this.documentProcessor.getProcessingStats(),
+                    },
                 };
                 logger.debug('Health check performed', health);
                 return {
@@ -175,14 +227,29 @@ export class SvgMcpServer extends FastMCP {
                     description: this.config.description,
                     capabilities: {
                         svgGeneration: true,
+                        documentProcessing: true,
                         validation: true,
                         optimization: true,
+                        accessibility: true,
                         rfc7996Compliance: true,
+                        metadataGeneration: true,
+                        transforms: ['scale', 'translate', 'normalize', 'accessibility'],
                     },
                     limits: {
                         maxSvgSize: this.config.maxSvgSize,
                     },
                     supportedElements: this.svgRenderer.getSupportedElements(),
+                    processor: {
+                        statistics: this.documentProcessor.getProcessingStats(),
+                        features: [
+                            'document_validation',
+                            'element_relationship_analysis',
+                            'compliance_checking',
+                            'optimization',
+                            'metadata_generation',
+                            'accessibility_enhancement',
+                        ],
+                    },
                 };
                 logger.debug('Server info requested', info);
                 return {
@@ -243,44 +310,6 @@ export class SvgMcpServer extends FastMCP {
                 };
             }
         });
-    }
-    async validateSvgDocument(document) {
-        const errors = [];
-        const warnings = [];
-        try {
-            // Validate viewBox
-            ViewBoxSchema.parse(document.viewBox);
-            if (document.viewBox.width <= 0 || document.viewBox.height <= 0) {
-                errors.push('ViewBox must have positive width and height');
-            }
-            // Validate elements exist
-            if (!document.elements || document.elements.length === 0) {
-                warnings.push('Document contains no elements');
-            }
-            // Validate element structure (basic validation)
-            document.elements.forEach((element, index) => {
-                if (!element.type) {
-                    errors.push(`Element at index ${index} is missing type property`);
-                }
-            });
-            // Check for potential performance issues
-            if (document.elements.length > 1000) {
-                warnings.push('Document contains a large number of elements, which may impact performance');
-            }
-        }
-        catch (error) {
-            if (error instanceof z.ZodError) {
-                errors.push(...error.errors.map(e => `${e.path.join('.')}: ${e.message}`));
-            }
-            else {
-                errors.push(`Validation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-            }
-        }
-        const valid = errors.length === 0;
-        if (!valid) {
-            throw new SvgValidationError('SVG document validation failed', { errors, warnings });
-        }
-        return { valid, errors, warnings };
     }
     async start() {
         logger.info('Starting SVG MCP Server', {

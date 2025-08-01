@@ -14,11 +14,11 @@ export interface SvgMcpServerConfig {
 }
 export declare class SvgMcpServer extends FastMCP {
     private svgRenderer;
+    private documentProcessor;
     private config;
     constructor(config: SvgMcpServerConfig);
     private setupTools;
     private setupResources;
-    private validateSvgDocument;
     start(): Promise<void>;
     stop(): Promise<void>;
 }
