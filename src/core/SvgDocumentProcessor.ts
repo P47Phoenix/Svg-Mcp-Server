@@ -5,6 +5,11 @@
 import { SvgDocument, SvgAnyElement, ViewBox, SvgValidationError } from '../types/svg.js';
 import { SvgRenderer } from './SvgRenderer.js';
 import { logger } from '../utils/logger.js';
+import { 
+  ValidationFactory, 
+  ValidationSuiteResult, 
+  ValidationPreset
+} from './validation/ValidationFactory.js';
 
 export interface SvgDocumentSpec {
   viewBox: ViewBox;
@@ -14,7 +19,7 @@ export interface SvgDocumentSpec {
   title?: string;
   description?: string;
   optimize?: boolean;
-  validate?: boolean;
+  validate?: boolean | ValidationPreset;
   generateMetadata?: boolean;
 }
 
@@ -28,7 +33,7 @@ export interface ProcessingResult {
 }
 
 export interface DocumentMetadata {
-  complexity: 'low' | 'medium' | 'high';
+  complexity: 'low' | 'medium' | 'high' | 'extreme';
   features: string[];
   accessibility: {
     hasTitle: boolean;
@@ -60,7 +65,8 @@ export class SvgDocumentProcessor {
       };
 
       if (spec.validate !== false) {
-        const validation = await this.validateDocument(document);
+        const validationPreset = typeof spec.validate === 'string' ? spec.validate : 'standard';
+        const validation = await this.validateDocument(document, validationPreset);
         errors.push(...validation.errors);
         warnings.push(...validation.warnings);
         
@@ -71,15 +77,21 @@ export class SvgDocumentProcessor {
 
       const svg = await this.renderer.render(document);
       
-      const metadata: DocumentMetadata = {
-        complexity: document.elements.length < 10 ? 'low' : document.elements.length < 100 ? 'medium' : 'high',
-        features: [...new Set(document.elements.map(el => el.type))],
-        accessibility: {
-          hasTitle: !!document.title,
-          hasDescription: !!document.description
-        },
-        compliance: 'svg20'
-      };
+      // Enhanced metadata generation using validation results
+      let metadata: DocumentMetadata;
+      if (spec.generateMetadata !== false) {
+        metadata = await this.generateMetadata(document);
+      } else {
+        metadata = {
+          complexity: document.elements.length < 10 ? 'low' : document.elements.length < 100 ? 'medium' : 'high',
+          features: [...new Set(document.elements.map(el => el.type))],
+          accessibility: {
+            hasTitle: !!document.title,
+            hasDescription: !!document.description
+          },
+          compliance: 'svg20'
+        };
+      }
 
       const processingTime = Date.now() - startTime;
 
@@ -91,26 +103,77 @@ export class SvgDocumentProcessor {
     }
   }
 
-  async validateDocument(document: SvgDocument): Promise<{
+  async validateDocument(document: SvgDocument, preset: ValidationPreset = 'standard'): Promise<{
     valid: boolean;
     errors: string[];
     warnings: string[];
+    validationResult?: ValidationSuiteResult;
   }> {
-    const errors: string[] = [];
-    const warnings: string[] = [];
+    try {
+      const validationResult = await ValidationFactory.validateDocument(document, { preset });
+      
+      const errors = validationResult.documentResult?.errors.map(e => e.message) || [];
+      const warnings = validationResult.documentResult?.warnings.map(w => w.message) || [];
 
-    if (document.viewBox.width <= 0) {
-      errors.push('ViewBox width must be positive');
-    }
-    if (document.viewBox.height <= 0) {
-      errors.push('ViewBox height must be positive');
-    }
+      // Add element-level errors and warnings
+      if (validationResult.elementResults) {
+        for (const elementResult of validationResult.elementResults.values()) {
+          errors.push(...elementResult.errors.map(e => e.message));
+          warnings.push(...elementResult.warnings.map(w => w.message));
+        }
+      }
 
-    return {
-      valid: errors.length === 0,
-      errors,
-      warnings
-    };
+      return {
+        valid: validationResult.overall.valid,
+        errors,
+        warnings,
+        validationResult
+      };
+    } catch (error) {
+      logger.error('Validation failed', { error, document });
+      return {
+        valid: false,
+        errors: ['Validation system error: ' + (error as Error).message],
+        warnings: []
+      };
+    }
+  }
+
+  async generateMetadata(document: SvgDocument): Promise<DocumentMetadata> {
+    try {
+      // Use performance validation to get detailed stats
+      const validationResult = await ValidationFactory.validateDocument(document, { 
+        preset: 'performance',
+        documentValidation: true,
+        elementValidation: false
+      });
+
+      const stats = validationResult.documentResult?.documentStats;
+      const accessibility = validationResult.documentResult?.accessibility;
+
+      return {
+        complexity: stats?.documentSize.complexity || 'low',
+        features: Array.from(stats?.elementTypes.keys() || []),
+        accessibility: {
+          hasTitle: accessibility?.hasTitle || !!document.title,
+          hasDescription: accessibility?.hasDescription || !!document.description
+        },
+        compliance: validationResult.documentResult?.compliance.compliant ? 'svg20' : 'non-compliant'
+      };
+    } catch (error) {
+      logger.warn('Failed to generate enhanced metadata, using basic metadata', { error });
+      
+      // Fallback to basic metadata
+      return {
+        complexity: document.elements.length < 10 ? 'low' : document.elements.length < 100 ? 'medium' : 'high',
+        features: [...new Set(document.elements.map(el => el.type))],
+        accessibility: {
+          hasTitle: !!document.title,
+          hasDescription: !!document.description
+        },
+        compliance: 'svg20'
+      };
+    }
   }
 
   getProcessingStats(): {

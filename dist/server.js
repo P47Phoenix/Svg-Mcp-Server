@@ -4369,6 +4369,1168 @@ var SvgRenderer = class {
   }
 };
 
+// src/core/validation/ElementValidators.ts
+var BaseElementValidator = class {
+  errors = [];
+  warnings = [];
+  suggestions = [];
+  addError(code, message, element, property, value) {
+    const error = {
+      code,
+      message,
+      severity: "error"
+    };
+    if (element !== void 0)
+      error.element = element;
+    if (property !== void 0)
+      error.property = property;
+    if (value !== void 0)
+      error.value = value;
+    this.errors.push(error);
+  }
+  addWarning(code, message, element, property, value) {
+    const warning = {
+      code,
+      message,
+      severity: "warning"
+    };
+    if (element !== void 0)
+      warning.element = element;
+    if (property !== void 0)
+      warning.property = property;
+    if (value !== void 0)
+      warning.value = value;
+    this.warnings.push(warning);
+  }
+  addSuggestion(code, message, suggestion, element, property) {
+    const sug = {
+      code,
+      message,
+      suggestion,
+      severity: "info"
+    };
+    if (element !== void 0)
+      sug.element = element;
+    if (property !== void 0)
+      sug.property = property;
+    this.suggestions.push(sug);
+  }
+  reset() {
+    this.errors = [];
+    this.warnings = [];
+    this.suggestions = [];
+  }
+  validateCommonProperties(element) {
+    if (element.id && element.id.trim() === "") {
+      this.addError("INVALID_ID", "Element ID cannot be empty", element, "id", element.id);
+    }
+    if (element.className && !this.isValidClassName(element.className)) {
+      this.addWarning("INVALID_CLASS_NAME", "Class name contains invalid characters", element, "className", element.className);
+    }
+    if (element.transform && !this.isValidTransform(element.transform)) {
+      this.addError("INVALID_TRANSFORM", "Transform contains invalid syntax", element, "transform", element.transform);
+    }
+    if (element.style) {
+      this.validateStyleProperties(element);
+    }
+  }
+  isValidClassName(className) {
+    return /^[a-zA-Z][\w\-]*$/.test(className);
+  }
+  isValidTransform(transform) {
+    const transformFunctions = /^(matrix|translate|scale|rotate|skewX|skewY)\s*\([^)]*\)(\s+(matrix|translate|scale|rotate|skewX|skewY)\s*\([^)]*\))*\s*$/;
+    return transformFunctions.test(transform.trim());
+  }
+  validateStyleProperties(element) {
+    const style = element.style;
+    if (style.opacity !== void 0 && (style.opacity < 0 || style.opacity > 1)) {
+      this.addError("INVALID_OPACITY", "Opacity must be between 0 and 1", element, "style.opacity", style.opacity);
+    }
+    if (style.fillOpacity !== void 0 && (style.fillOpacity < 0 || style.fillOpacity > 1)) {
+      this.addError("INVALID_FILL_OPACITY", "Fill opacity must be between 0 and 1", element, "style.fillOpacity", style.fillOpacity);
+    }
+    if (style.strokeOpacity !== void 0 && (style.strokeOpacity < 0 || style.strokeOpacity > 1)) {
+      this.addError("INVALID_STROKE_OPACITY", "Stroke opacity must be between 0 and 1", element, "style.strokeOpacity", style.strokeOpacity);
+    }
+    if (style.strokeWidth !== void 0 && style.strokeWidth < 0) {
+      this.addError("INVALID_STROKE_WIDTH", "Stroke width cannot be negative", element, "style.strokeWidth", style.strokeWidth);
+    }
+    if (style.fill && !this.isValidColor(style.fill)) {
+      this.addWarning("INVALID_COLOR_FORMAT", "Fill color format may not be valid", element, "style.fill", style.fill);
+    }
+    if (style.stroke && !this.isValidColor(style.stroke)) {
+      this.addWarning("INVALID_COLOR_FORMAT", "Stroke color format may not be valid", element, "style.stroke", style.stroke);
+    }
+  }
+  isValidColor(color) {
+    const colorPatterns = [
+      /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/,
+      // hex
+      /^rgb\s*\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/,
+      // rgb
+      /^rgba\s*\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*(0|1|0?\.\d+)\s*\)$/,
+      // rgba
+      /^hsl\s*\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*\)$/,
+      // hsl
+      /^hsla\s*\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%\s*,\s*(0|1|0?\.\d+)\s*\)$/
+      // hsla
+    ];
+    if (["none", "transparent", "currentColor"].includes(color)) {
+      return true;
+    }
+    const namedColors = ["red", "green", "blue", "black", "white", "yellow", "orange", "purple", "pink", "brown", "gray", "grey"];
+    if (namedColors.includes(color.toLowerCase())) {
+      return true;
+    }
+    return colorPatterns.some((pattern) => pattern.test(color));
+  }
+};
+var CircleValidator = class extends BaseElementValidator {
+  validate(element, _context) {
+    this.reset();
+    if (element.type !== "circle") {
+      this.addError("WRONG_ELEMENT_TYPE", `Expected circle element, got ${element.type}`, element);
+      return this.getResult();
+    }
+    const circle = element;
+    this.validateCommonProperties(circle);
+    this.validateRadius(circle);
+    this.validateCenter(circle);
+    this.checkVisibility(circle);
+    this.checkPerformance(circle);
+    return this.getResult();
+  }
+  validateRadius(circle) {
+    if (circle.r < 0) {
+      this.addError("NEGATIVE_RADIUS", "Circle radius cannot be negative", circle, "r", circle.r);
+    } else if (circle.r === 0) {
+      this.addWarning("ZERO_RADIUS", "Circle with zero radius will not be visible", circle, "r", circle.r);
+    } else if (circle.r > 1e4) {
+      this.addWarning("LARGE_RADIUS", "Very large radius may impact performance", circle, "r", circle.r);
+    }
+  }
+  validateCenter(circle) {
+    if (!Number.isFinite(circle.cx) || !Number.isFinite(circle.cy)) {
+      this.addError("INVALID_CENTER", "Circle center coordinates must be finite numbers", circle, "cx,cy", { cx: circle.cx, cy: circle.cy });
+    }
+    if (Math.abs(circle.cx) > 1e6 || Math.abs(circle.cy) > 1e6) {
+      this.addWarning("EXTREME_COORDINATES", "Circle center coordinates are very large", circle, "cx,cy", { cx: circle.cx, cy: circle.cy });
+    }
+  }
+  checkVisibility(circle) {
+    const style = circle.style;
+    if (style?.fill === "none" && (!style?.stroke || style.stroke === "none")) {
+      this.addWarning("INVISIBLE_ELEMENT", "Circle has no fill or stroke and will not be visible", circle);
+    }
+  }
+  checkPerformance(circle) {
+    if (circle.r > 1e3 && circle.style?.strokeDasharray) {
+      this.addSuggestion("PERFORMANCE_OPTIMIZATION", "Large circle with stroke dash array may impact performance", "Consider simplifying the stroke pattern or reducing the radius", circle);
+    }
+  }
+  getResult() {
+    return {
+      valid: this.errors.length === 0,
+      errors: this.errors,
+      warnings: this.warnings,
+      suggestions: this.suggestions
+    };
+  }
+};
+var RectValidator = class extends BaseElementValidator {
+  validate(element, _context) {
+    this.reset();
+    if (element.type !== "rect") {
+      this.addError("WRONG_ELEMENT_TYPE", `Expected rect element, got ${element.type}`, element);
+      return this.getResult();
+    }
+    const rect = element;
+    this.validateCommonProperties(rect);
+    this.validateDimensions(rect);
+    this.validatePosition(rect);
+    this.validateCornerRadius(rect);
+    this.checkVisibility(rect);
+    return this.getResult();
+  }
+  validateDimensions(rect) {
+    if (rect.width < 0) {
+      this.addError("NEGATIVE_WIDTH", "Rectangle width cannot be negative", rect, "width", rect.width);
+    } else if (rect.width === 0) {
+      this.addWarning("ZERO_WIDTH", "Rectangle with zero width will not be visible", rect, "width", rect.width);
+    }
+    if (rect.height < 0) {
+      this.addError("NEGATIVE_HEIGHT", "Rectangle height cannot be negative", rect, "height", rect.height);
+    } else if (rect.height === 0) {
+      this.addWarning("ZERO_HEIGHT", "Rectangle with zero height will not be visible", rect, "height", rect.height);
+    }
+    if (rect.width > 1e4 || rect.height > 1e4) {
+      this.addWarning("LARGE_DIMENSIONS", "Very large rectangle dimensions may impact performance", rect, "width,height", { width: rect.width, height: rect.height });
+    }
+  }
+  validatePosition(rect) {
+    if (!Number.isFinite(rect.x) || !Number.isFinite(rect.y)) {
+      this.addError("INVALID_POSITION", "Rectangle position coordinates must be finite numbers", rect, "x,y", { x: rect.x, y: rect.y });
+    }
+  }
+  validateCornerRadius(rect) {
+    if (rect.rx !== void 0) {
+      if (rect.rx < 0) {
+        this.addError("NEGATIVE_CORNER_RADIUS", "Corner radius rx cannot be negative", rect, "rx", rect.rx);
+      } else if (rect.rx > rect.width / 2) {
+        this.addWarning("EXCESSIVE_CORNER_RADIUS", "Corner radius rx is larger than half the width", rect, "rx", rect.rx);
+      }
+    }
+    if (rect.ry !== void 0) {
+      if (rect.ry < 0) {
+        this.addError("NEGATIVE_CORNER_RADIUS", "Corner radius ry cannot be negative", rect, "ry", rect.ry);
+      } else if (rect.ry > rect.height / 2) {
+        this.addWarning("EXCESSIVE_CORNER_RADIUS", "Corner radius ry is larger than half the height", rect, "ry", rect.ry);
+      }
+    }
+  }
+  checkVisibility(rect) {
+    const style = rect.style;
+    if (style?.fill === "none" && (!style?.stroke || style.stroke === "none")) {
+      this.addWarning("INVISIBLE_ELEMENT", "Rectangle has no fill or stroke and will not be visible", rect);
+    }
+  }
+  getResult() {
+    return {
+      valid: this.errors.length === 0,
+      errors: this.errors,
+      warnings: this.warnings,
+      suggestions: this.suggestions
+    };
+  }
+};
+var LineValidator = class extends BaseElementValidator {
+  validate(element, _context) {
+    this.reset();
+    if (element.type !== "line") {
+      this.addError("WRONG_ELEMENT_TYPE", `Expected line element, got ${element.type}`, element);
+      return this.getResult();
+    }
+    const line = element;
+    this.validateCommonProperties(line);
+    this.validateCoordinates(line);
+    this.checkLineLength(line);
+    this.checkVisibility(line);
+    return this.getResult();
+  }
+  validateCoordinates(line) {
+    const coords = [line.x1, line.y1, line.x2, line.y2];
+    for (const [index, coord] of coords.entries()) {
+      if (!Number.isFinite(coord)) {
+        const coordName = ["x1", "y1", "x2", "y2"][index];
+        this.addError("INVALID_COORDINATE", `Line coordinate ${coordName} must be a finite number`, line, coordName, coord);
+      }
+    }
+  }
+  checkLineLength(line) {
+    const length = Math.sqrt(Math.pow(line.x2 - line.x1, 2) + Math.pow(line.y2 - line.y1, 2));
+    if (length === 0) {
+      this.addWarning("ZERO_LENGTH_LINE", "Line has zero length and will not be visible", line);
+    } else if (length > 1e4) {
+      this.addWarning("VERY_LONG_LINE", "Very long line may impact performance", line);
+    }
+  }
+  checkVisibility(line) {
+    const style = line.style;
+    if (!style?.stroke || style.stroke === "none") {
+      this.addWarning("INVISIBLE_LINE", "Line has no stroke and will not be visible", line);
+    }
+  }
+  getResult() {
+    return {
+      valid: this.errors.length === 0,
+      errors: this.errors,
+      warnings: this.warnings,
+      suggestions: this.suggestions
+    };
+  }
+};
+var PathValidator = class extends BaseElementValidator {
+  validate(element, _context) {
+    this.reset();
+    if (element.type !== "path") {
+      this.addError("WRONG_ELEMENT_TYPE", `Expected path element, got ${element.type}`, element);
+      return this.getResult();
+    }
+    const path = element;
+    this.validateCommonProperties(path);
+    this.validatePathData(path);
+    this.checkComplexity(path);
+    this.checkVisibility(path);
+    return this.getResult();
+  }
+  validatePathData(path) {
+    if (!path.d || path.d.trim() === "") {
+      this.addError("EMPTY_PATH_DATA", "Path data (d attribute) cannot be empty", path, "d", path.d);
+      return;
+    }
+    const pathCommands = /^[MmLlHhVvCcSsQqTtAaZz\d\s,.-]+$/;
+    if (!pathCommands.test(path.d)) {
+      this.addError("INVALID_PATH_DATA", "Path data contains invalid characters", path, "d", path.d);
+    }
+    if (!this.hasValidPathStructure(path.d)) {
+      this.addWarning("QUESTIONABLE_PATH_STRUCTURE", "Path data structure may be malformed", path, "d", path.d);
+    }
+  }
+  hasValidPathStructure(pathData) {
+    const trimmed = pathData.trim();
+    return /^[Mm]/.test(trimmed);
+  }
+  checkComplexity(path) {
+    if (path.d.length > 1e4) {
+      this.addWarning("COMPLEX_PATH", "Very long path data may impact performance", path, "d");
+      this.addSuggestion("OPTIMIZE_PATH", "Path is very complex", "Consider simplifying the path or breaking it into smaller segments", path, "d");
+    }
+    const commandCount = (path.d.match(/[MmLlHhVvCcSsQqTtAaZz]/g) || []).length;
+    if (commandCount > 1e3) {
+      this.addWarning("HIGH_COMMAND_COUNT", "Path has many commands and may impact performance", path, "d");
+    }
+  }
+  checkVisibility(path) {
+    const style = path.style;
+    if (style?.fill === "none" && (!style?.stroke || style.stroke === "none")) {
+      this.addWarning("INVISIBLE_ELEMENT", "Path has no fill or stroke and will not be visible", path);
+    }
+  }
+  getResult() {
+    return {
+      valid: this.errors.length === 0,
+      errors: this.errors,
+      warnings: this.warnings,
+      suggestions: this.suggestions
+    };
+  }
+};
+var TextValidator = class extends BaseElementValidator {
+  validate(element, _context) {
+    this.reset();
+    if (element.type !== "text") {
+      this.addError("WRONG_ELEMENT_TYPE", `Expected text element, got ${element.type}`, element);
+      return this.getResult();
+    }
+    const text = element;
+    this.validateCommonProperties(text);
+    this.validateContent(text);
+    this.validatePosition(text);
+    this.validateTextStyle(text);
+    this.checkAccessibility(text);
+    return this.getResult();
+  }
+  validateContent(text) {
+    if (!text.content || text.content.trim() === "") {
+      this.addWarning("EMPTY_TEXT_CONTENT", "Text element has no content", text, "content", text.content);
+    }
+    if (text.content && text.content.length > 1e4) {
+      this.addWarning("VERY_LONG_TEXT", "Very long text content may impact performance", text, "content");
+    }
+  }
+  validatePosition(text) {
+    if (!Number.isFinite(text.x) || !Number.isFinite(text.y)) {
+      this.addError("INVALID_POSITION", "Text position coordinates must be finite numbers", text, "x,y", { x: text.x, y: text.y });
+    }
+  }
+  validateTextStyle(text) {
+    const style = text.style;
+    if (!style)
+      return;
+    if (style.fontSize !== void 0 && style.fontSize <= 0) {
+      this.addError("INVALID_FONT_SIZE", "Font size must be positive", text, "style.fontSize", style.fontSize);
+    }
+    if (style.fontSize !== void 0 && style.fontSize > 1e3) {
+      this.addWarning("VERY_LARGE_FONT", "Very large font size may impact layout", text, "style.fontSize", style.fontSize);
+    }
+  }
+  checkAccessibility(text) {
+    const style = text.style;
+    if (style?.fill && style.fill === style?.stroke) {
+      this.addWarning("LOW_CONTRAST", "Text fill and stroke colors are the same, may reduce readability", text);
+    }
+    if (style?.fontSize && style.fontSize < 8) {
+      this.addSuggestion("ACCESSIBILITY_IMPROVEMENT", "Very small text may be hard to read", "Consider increasing font size for better accessibility", text, "style.fontSize");
+    }
+  }
+  getResult() {
+    return {
+      valid: this.errors.length === 0,
+      errors: this.errors,
+      warnings: this.warnings,
+      suggestions: this.suggestions
+    };
+  }
+};
+var GroupValidator = class extends BaseElementValidator {
+  validate(element, context) {
+    this.reset();
+    if (element.type !== "group") {
+      this.addError("WRONG_ELEMENT_TYPE", `Expected group element, got ${element.type}`, element);
+      return this.getResult();
+    }
+    const group = element;
+    this.validateCommonProperties(group);
+    this.validateChildren(group, context);
+    this.checkNesting(group, context);
+    return this.getResult();
+  }
+  validateChildren(group, _context) {
+    if (!group.children || group.children.length === 0) {
+      this.addWarning("EMPTY_GROUP", "Group element has no children", group, "children");
+    }
+    if (group.children && group.children.length > 1e3) {
+      this.addWarning("LARGE_GROUP", "Group has many children and may impact performance", group, "children");
+    }
+  }
+  checkNesting(group, context) {
+    if (context?.parentElement?.type === "group") {
+      const nestingDepth = 1;
+      if (nestingDepth > 10) {
+        this.addWarning("DEEP_NESTING", "Deep group nesting may impact performance", group);
+      }
+    }
+  }
+  getResult() {
+    return {
+      valid: this.errors.length === 0,
+      errors: this.errors,
+      warnings: this.warnings,
+      suggestions: this.suggestions
+    };
+  }
+};
+var ElementValidatorFactory = class {
+  static validators = /* @__PURE__ */ new Map([
+    ["circle", new CircleValidator()],
+    ["rect", new RectValidator()],
+    ["line", new LineValidator()],
+    ["path", new PathValidator()],
+    ["text", new TextValidator()],
+    ["group", new GroupValidator()]
+  ]);
+  static getValidator(elementType) {
+    return this.validators.get(elementType) || null;
+  }
+  static validateElement(element, context) {
+    const validator = this.getValidator(element.type);
+    if (!validator) {
+      return {
+        valid: false,
+        errors: [{
+          code: "UNKNOWN_ELEMENT_TYPE",
+          message: `Unknown element type: ${element.type}`,
+          element,
+          severity: "error"
+        }],
+        warnings: [],
+        suggestions: []
+      };
+    }
+    return validator.validate(element, context);
+  }
+  static getSupportedElementTypes() {
+    return Array.from(this.validators.keys());
+  }
+};
+
+// src/core/validation/DocumentValidator.ts
+var DocumentValidator = class {
+  options;
+  constructor(options = {}) {
+    this.options = {
+      checkAccessibility: true,
+      checkPerformance: true,
+      checkCompliance: true,
+      targetCompliance: "svg20",
+      maxElements: 1e4,
+      maxNestingDepth: 20,
+      allowUnknownElements: false,
+      ...options
+    };
+  }
+  /**
+   * Validate an entire SVG document
+   */
+  async validateDocument(document) {
+    const errors = [];
+    const warnings = [];
+    const suggestions = [];
+    const elementResults = /* @__PURE__ */ new Map();
+    this.validateDocumentStructure(document, errors, warnings);
+    const context = this.buildValidationContext(document);
+    this.validateViewBox(document.viewBox, errors, warnings);
+    document.elements.forEach((element, index) => {
+      const elementContext = {
+        elementIndex: index,
+        siblingElements: document.elements,
+        documentIds: context.documentIds,
+        referencedIds: context.referencedIds
+      };
+      const result = ElementValidatorFactory.validateElement(element, elementContext);
+      elementResults.set(index, result);
+      errors.push(...result.errors);
+      warnings.push(...result.warnings);
+      suggestions.push(...result.suggestions);
+    });
+    this.validateCrossElementReferences(document, context, errors, warnings);
+    this.validateIdUniqueness(context, errors);
+    const documentStats = this.generateDocumentStats(document, context);
+    const compliance = this.options.checkCompliance ? await this.generateComplianceReport(document, this.options.targetCompliance) : this.createEmptyComplianceReport();
+    const accessibility = this.options.checkAccessibility ? this.generateAccessibilityReport(document) : this.createEmptyAccessibilityReport();
+    const performance = this.options.checkPerformance ? this.generatePerformanceReport(document, documentStats) : this.createEmptyPerformanceReport();
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings,
+      suggestions,
+      elementResults,
+      documentStats,
+      compliance,
+      accessibility,
+      performance
+    };
+  }
+  validateDocumentStructure(document, errors, warnings) {
+    if (!document.viewBox) {
+      errors.push({
+        code: "MISSING_VIEWBOX",
+        message: "Document must have a viewBox",
+        severity: "error"
+      });
+    }
+    if (!document.elements || document.elements.length === 0) {
+      warnings.push({
+        code: "EMPTY_DOCUMENT",
+        message: "Document has no elements",
+        severity: "warning"
+      });
+    }
+    if (document.elements && document.elements.length > this.options.maxElements) {
+      errors.push({
+        code: "TOO_MANY_ELEMENTS",
+        message: `Document exceeds maximum element limit of ${this.options.maxElements}`,
+        severity: "error",
+        value: document.elements.length
+      });
+    }
+    if (!document.title && !document.description) {
+      warnings.push({
+        code: "MISSING_ACCESSIBILITY_METADATA",
+        message: "Document should have a title or description for accessibility",
+        severity: "warning"
+      });
+    }
+  }
+  buildValidationContext(document) {
+    const documentIds = /* @__PURE__ */ new Set();
+    const referencedIds = /* @__PURE__ */ new Set();
+    const collectIds = (element) => {
+      if (element.id) {
+        documentIds.add(element.id);
+      }
+      if (element.clipPath) {
+        const id = this.extractIdFromUrl(element.clipPath);
+        if (id)
+          referencedIds.add(id);
+      }
+      if (element.mask) {
+        const id = this.extractIdFromUrl(element.mask);
+        if (id)
+          referencedIds.add(id);
+      }
+      if (element.type === "group") {
+        element.children.forEach(collectIds);
+      }
+    };
+    document.elements.forEach(collectIds);
+    return { documentIds, referencedIds };
+  }
+  extractIdFromUrl(url) {
+    const match = url.match(/url\(#([^)]+)\)/);
+    return match?.[1] ?? null;
+  }
+  validateViewBox(viewBox, errors, warnings) {
+    if (viewBox.width <= 0) {
+      errors.push({
+        code: "INVALID_VIEWBOX_WIDTH",
+        message: "ViewBox width must be positive",
+        severity: "error",
+        property: "viewBox.width",
+        value: viewBox.width
+      });
+    }
+    if (viewBox.height <= 0) {
+      errors.push({
+        code: "INVALID_VIEWBOX_HEIGHT",
+        message: "ViewBox height must be positive",
+        severity: "error",
+        property: "viewBox.height",
+        value: viewBox.height
+      });
+    }
+    if (viewBox.width > 1e5 || viewBox.height > 1e5) {
+      warnings.push({
+        code: "VERY_LARGE_VIEWBOX",
+        message: "Very large viewBox dimensions may impact performance",
+        severity: "warning",
+        property: "viewBox",
+        value: viewBox
+      });
+    }
+    const aspectRatio = viewBox.width / viewBox.height;
+    if (aspectRatio > 100 || aspectRatio < 0.01) {
+      warnings.push({
+        code: "EXTREME_ASPECT_RATIO",
+        message: "Extreme aspect ratio may cause rendering issues",
+        severity: "warning",
+        property: "viewBox",
+        value: aspectRatio
+      });
+    }
+  }
+  validateCrossElementReferences(_document, context, errors, warnings) {
+    for (const referencedId of context.referencedIds) {
+      if (!context.documentIds.has(referencedId)) {
+        errors.push({
+          code: "MISSING_REFERENCE",
+          message: `Referenced ID '${referencedId}' not found in document`,
+          severity: "error",
+          value: referencedId
+        });
+      }
+    }
+    for (const documentId of context.documentIds) {
+      if (!context.referencedIds.has(documentId)) {
+        warnings.push({
+          code: "UNREFERENCED_ID",
+          message: `ID '${documentId}' is defined but never referenced`,
+          severity: "warning",
+          value: documentId
+        });
+      }
+    }
+  }
+  validateIdUniqueness(context, errors) {
+    const seenIds = /* @__PURE__ */ new Set();
+    const duplicates = /* @__PURE__ */ new Set();
+    for (const id of context.documentIds) {
+      if (seenIds.has(id)) {
+        duplicates.add(id);
+      } else {
+        seenIds.add(id);
+      }
+    }
+    for (const duplicateId of duplicates) {
+      errors.push({
+        code: "DUPLICATE_ID",
+        message: `Duplicate ID found: '${duplicateId}'`,
+        severity: "error",
+        value: duplicateId
+      });
+    }
+  }
+  generateDocumentStats(document, context) {
+    const elementTypes = /* @__PURE__ */ new Map();
+    let maxNestingDepth = 0;
+    const analyzeElement = (element, depth = 0) => {
+      maxNestingDepth = Math.max(maxNestingDepth, depth);
+      const count = elementTypes.get(element.type) || 0;
+      elementTypes.set(element.type, count + 1);
+      if (element.type === "group") {
+        element.children.forEach((child) => analyzeElement(child, depth + 1));
+      }
+    };
+    document.elements.forEach((element) => analyzeElement(element));
+    const duplicateIds = [];
+    const unreferencedIds = [];
+    const missingReferences = [];
+    for (const id of context.documentIds) {
+      if (!context.referencedIds.has(id)) {
+        unreferencedIds.push(id);
+      }
+    }
+    for (const id of context.referencedIds) {
+      if (!context.documentIds.has(id)) {
+        missingReferences.push(id);
+      }
+    }
+    const estimatedBytes = JSON.stringify(document).length;
+    let complexity;
+    if (document.elements.length < 10 && maxNestingDepth < 3) {
+      complexity = "low";
+    } else if (document.elements.length < 100 && maxNestingDepth < 6) {
+      complexity = "medium";
+    } else if (document.elements.length < 1e3 && maxNestingDepth < 10) {
+      complexity = "high";
+    } else {
+      complexity = "extreme";
+    }
+    return {
+      totalElements: document.elements.length,
+      elementTypes,
+      maxNestingDepth,
+      totalIds: context.documentIds.size,
+      duplicateIds,
+      unreferencedIds,
+      missingReferences,
+      documentSize: {
+        estimatedBytes,
+        complexity
+      }
+    };
+  }
+  async generateComplianceReport(document, standard) {
+    const violations = [];
+    const recommendations = [];
+    if (standard === "svg20") {
+      if (!document.viewBox) {
+        violations.push({
+          rule: "SVG2.0-VIEWBOX-REQUIRED",
+          description: "ViewBox is recommended for SVG 2.0 documents",
+          elements: [],
+          severity: "warning"
+        });
+      }
+      if (document.elements.some((el) => el.type === "group" && (!el.children || el.children.length === 0))) {
+        violations.push({
+          rule: "SVG2.0-EMPTY-GROUPS",
+          description: "Empty group elements should be avoided",
+          elements: document.elements.filter((el) => el.type === "group" && (!el.children || el.children.length === 0)),
+          severity: "warning"
+        });
+      }
+      recommendations.push("Consider adding accessibility metadata (title, description)");
+      recommendations.push("Use semantic grouping with meaningful IDs");
+    }
+    return {
+      standard: "SVG",
+      version: standard,
+      compliant: violations.filter((v) => v.severity === "error").length === 0,
+      violations,
+      recommendations
+    };
+  }
+  generateAccessibilityReport(document) {
+    let score = 100;
+    const colorContrastIssues = [];
+    const textSizeIssues = [];
+    const recommendations = [];
+    const hasTitle = !!document.title;
+    const hasDescription = !!document.description;
+    if (!hasTitle) {
+      score -= 20;
+      recommendations.push("Add a title for screen readers");
+    }
+    if (!hasDescription) {
+      score -= 15;
+      recommendations.push("Add a description for better accessibility");
+    }
+    const hasAriaLabels = document.elements.some(
+      (el) => el.style && "aria-label" in el.style
+    );
+    if (!hasAriaLabels) {
+      score -= 10;
+      recommendations.push("Consider adding aria-label attributes to important elements");
+    }
+    const textElements = document.elements.filter((el) => el.type === "text");
+    textElements.forEach((textEl) => {
+      const fontSize = textEl.style?.fontSize || 16;
+      if (fontSize < 12) {
+        textSizeIssues.push({
+          element: textEl,
+          fontSize,
+          recommended: 12
+        });
+        score -= 5;
+      }
+    });
+    if (textSizeIssues.length > 0) {
+      recommendations.push("Increase font sizes for better readability");
+    }
+    return {
+      score: Math.max(0, score),
+      hasTitle,
+      hasDescription,
+      hasAriaLabels,
+      colorContrastIssues,
+      textSizeIssues,
+      recommendations
+    };
+  }
+  generatePerformanceReport(document, stats) {
+    let score = 100;
+    const issues = [];
+    const optimizations = [];
+    let renderComplexity = 0;
+    document.elements.forEach((element) => {
+      switch (element.type) {
+        case "circle":
+        case "rect":
+        case "line":
+          renderComplexity += 1;
+          break;
+        case "path":
+          renderComplexity += 3;
+          break;
+        case "text":
+          renderComplexity += 2;
+          break;
+        case "group":
+          renderComplexity += 0.5;
+          break;
+      }
+    });
+    if (stats.totalElements > 1e3) {
+      issues.push({
+        type: "complexity",
+        description: "Document has many elements",
+        impact: "high"
+      });
+      score -= 30;
+      optimizations.push("Consider grouping similar elements or using patterns");
+    }
+    if (stats.maxNestingDepth > 10) {
+      issues.push({
+        type: "nesting",
+        description: "Deep element nesting detected",
+        impact: "medium"
+      });
+      score -= 15;
+      optimizations.push("Flatten deeply nested structures where possible");
+    }
+    if (stats.documentSize.estimatedBytes > 1e6) {
+      issues.push({
+        type: "size",
+        description: "Document is very large",
+        impact: "high"
+      });
+      score -= 25;
+      optimizations.push("Consider optimizing path data and removing unused elements");
+    }
+    const memoryEstimate = Math.max(1, stats.documentSize.estimatedBytes / 1024);
+    return {
+      score: Math.max(0, score),
+      renderComplexity,
+      memoryEstimate,
+      issues,
+      optimizations
+    };
+  }
+  createEmptyComplianceReport() {
+    return {
+      standard: "N/A",
+      version: "N/A",
+      compliant: true,
+      violations: [],
+      recommendations: []
+    };
+  }
+  createEmptyAccessibilityReport() {
+    return {
+      score: 0,
+      hasTitle: false,
+      hasDescription: false,
+      hasAriaLabels: false,
+      colorContrastIssues: [],
+      textSizeIssues: [],
+      recommendations: []
+    };
+  }
+  createEmptyPerformanceReport() {
+    return {
+      score: 0,
+      renderComplexity: 0,
+      memoryEstimate: 0,
+      issues: [],
+      optimizations: []
+    };
+  }
+};
+
+// src/core/validation/ValidationFactory.ts
+var ValidationFactory = class {
+  static presetConfigs = {
+    strict: {
+      checkAccessibility: true,
+      checkPerformance: true,
+      checkCompliance: true,
+      targetCompliance: "svg20",
+      maxElements: 5e3,
+      maxNestingDepth: 15,
+      allowUnknownElements: false
+    },
+    standard: {
+      checkAccessibility: true,
+      checkPerformance: true,
+      checkCompliance: true,
+      targetCompliance: "svg20",
+      maxElements: 1e4,
+      maxNestingDepth: 20,
+      allowUnknownElements: true
+    },
+    minimal: {
+      checkAccessibility: false,
+      checkPerformance: false,
+      checkCompliance: false,
+      maxElements: 5e4,
+      maxNestingDepth: 50,
+      allowUnknownElements: true
+    },
+    performance: {
+      checkAccessibility: false,
+      checkPerformance: true,
+      checkCompliance: false,
+      maxElements: 1e3,
+      maxNestingDepth: 10,
+      allowUnknownElements: true
+    },
+    accessibility: {
+      checkAccessibility: true,
+      checkPerformance: false,
+      checkCompliance: true,
+      targetCompliance: "svg20",
+      maxElements: 5e4,
+      maxNestingDepth: 50,
+      allowUnknownElements: true
+    },
+    custom: {
+      // Default values - will be overridden by user config
+      checkAccessibility: true,
+      checkPerformance: true,
+      checkCompliance: true,
+      targetCompliance: "svg20",
+      maxElements: 1e4,
+      maxNestingDepth: 20,
+      allowUnknownElements: true
+    }
+  };
+  /**
+   * Create a document validator with preset configuration
+   */
+  static createDocumentValidator(preset = "standard") {
+    const options = { ...this.presetConfigs[preset] };
+    return new DocumentValidator(options);
+  }
+  /**
+   * Create a document validator with custom options
+   */
+  static createCustomDocumentValidator(options) {
+    return new DocumentValidator(options);
+  }
+  /**
+   * Validate a single SVG element
+   */
+  static validateElement(element, context) {
+    return ElementValidatorFactory.validateElement(element, context);
+  }
+  /**
+   * Run a complete validation suite on an SVG document
+   */
+  static async validateDocument(document, config = {}) {
+    const {
+      preset = "standard",
+      elementValidation = true,
+      documentValidation = true,
+      documentOptions
+    } = config;
+    const baseOptions = preset === "custom" ? {} : this.presetConfigs[preset];
+    const finalOptions = { ...baseOptions, ...documentOptions };
+    const recommendations = [];
+    const quickFixes = [];
+    let elementResults;
+    let documentResult;
+    if (elementValidation) {
+      elementResults = /* @__PURE__ */ new Map();
+      document.elements.forEach((element, index) => {
+        const context = {
+          elementIndex: index,
+          siblingElements: document.elements,
+          documentIds: /* @__PURE__ */ new Set(),
+          referencedIds: /* @__PURE__ */ new Set()
+        };
+        const result2 = ElementValidatorFactory.validateElement(element, context);
+        elementResults.set(index, result2);
+        result2.suggestions.forEach((suggestion) => {
+          const quickFix = {
+            type: "modify",
+            description: suggestion.message,
+            priority: this.getSuggestionPriority(suggestion.code),
+            automated: this.isAutomatable(suggestion.code)
+          };
+          if (suggestion.property !== void 0)
+            quickFix.property = suggestion.property;
+          if (suggestion.suggestedValue !== void 0)
+            quickFix.suggestedValue = suggestion.suggestedValue;
+          quickFixes.push(quickFix);
+        });
+      });
+    }
+    if (documentValidation) {
+      const validator = new DocumentValidator(finalOptions);
+      documentResult = await validator.validateDocument(document);
+      if (documentResult.accessibility.recommendations) {
+        recommendations.push(...documentResult.accessibility.recommendations);
+      }
+      if (documentResult.performance.optimizations) {
+        recommendations.push(...documentResult.performance.optimizations);
+      }
+      if (documentResult.compliance.recommendations) {
+        recommendations.push(...documentResult.compliance.recommendations);
+      }
+      documentResult.warnings.forEach((warning) => {
+        quickFixes.push({
+          type: "modify",
+          description: warning.message,
+          priority: "medium",
+          automated: false
+        });
+      });
+    }
+    const overall = this.calculateOverallResults(elementResults, documentResult, recommendations);
+    const result = {
+      overall,
+      recommendations: Array.from(new Set(recommendations)),
+      // Remove duplicates
+      quickFixes
+    };
+    if (elementResults !== void 0)
+      result.elementResults = elementResults;
+    if (documentResult !== void 0)
+      result.documentResult = documentResult;
+    return result;
+  }
+  /**
+   * Quick validation for performance-critical scenarios
+   */
+  static quickValidate(document) {
+    const criticalIssues = [];
+    if (!document.viewBox) {
+      criticalIssues.push("Missing viewBox");
+    }
+    if (!document.elements || document.elements.length === 0) {
+      criticalIssues.push("No elements in document");
+    }
+    if (document.viewBox) {
+      if (document.viewBox.width <= 0 || document.viewBox.height <= 0) {
+        criticalIssues.push("Invalid viewBox dimensions");
+      }
+    }
+    let invalidElements = 0;
+    document.elements?.forEach((element) => {
+      if (!element.type) {
+        invalidElements++;
+      }
+    });
+    if (invalidElements > 0) {
+      criticalIssues.push(`${invalidElements} elements missing type information`);
+    }
+    return {
+      valid: criticalIssues.length === 0,
+      criticalIssues,
+      elementCount: document.elements?.length || 0
+    };
+  }
+  /**
+   * Validate and suggest automatic fixes
+   */
+  static async validateWithAutoFix(document, preset = "standard") {
+    const validationResult = await this.validateDocument(document, { preset });
+    const appliedFixes = [];
+    let autoFixedDocument;
+    const automatableFixes = validationResult.quickFixes.filter((fix) => fix.automated);
+    if (automatableFixes.length > 0) {
+      autoFixedDocument = { ...document };
+      for (const fix of automatableFixes) {
+        try {
+          this.applyFix(autoFixedDocument, fix);
+          appliedFixes.push(fix.description);
+        } catch (error) {
+          console.warn(`Failed to apply auto-fix: ${fix.description}`, error);
+        }
+      }
+    }
+    const result = {
+      validationResult,
+      appliedFixes
+    };
+    if (autoFixedDocument !== void 0)
+      result.autoFixedDocument = autoFixedDocument;
+    return result;
+  }
+  static calculateOverallResults(elementResults, documentResult, _recommendations) {
+    let score = 100;
+    let totalErrors = 0;
+    let totalWarnings = 0;
+    if (elementResults) {
+      for (const result of elementResults.values()) {
+        totalErrors += result.errors.length;
+        totalWarnings += result.warnings.length;
+        score -= result.errors.length * 10;
+        score -= result.warnings.length * 2;
+      }
+    }
+    if (documentResult) {
+      totalErrors += documentResult.errors.length;
+      totalWarnings += documentResult.warnings.length;
+      score -= documentResult.errors.length * 15;
+      score -= documentResult.warnings.length * 3;
+      if (documentResult.accessibility.score < 100) {
+        score -= (100 - documentResult.accessibility.score) * 0.2;
+      }
+      if (documentResult.performance.score < 100) {
+        score -= (100 - documentResult.performance.score) * 0.1;
+      }
+    }
+    score = Math.max(0, Math.min(100, score));
+    let summary = "";
+    if (totalErrors === 0 && totalWarnings === 0) {
+      summary = "Document is valid with no issues detected";
+    } else if (totalErrors === 0) {
+      summary = `Document is valid with ${totalWarnings} warning(s)`;
+    } else {
+      summary = `Document has ${totalErrors} error(s) and ${totalWarnings} warning(s)`;
+    }
+    return {
+      valid: totalErrors === 0,
+      score: Math.round(score),
+      summary
+    };
+  }
+  static getSuggestionPriority(code) {
+    const highPriority = ["MISSING_REQUIRED_ATTRIBUTE", "INVALID_DIMENSION", "NEGATIVE_DIMENSION"];
+    const lowPriority = ["STYLE_OPTIMIZATION", "PERFORMANCE_SUGGESTION"];
+    if (highPriority.some((hp) => code.includes(hp)))
+      return "high";
+    if (lowPriority.some((lp) => code.includes(lp)))
+      return "low";
+    return "medium";
+  }
+  static isAutomatable(code) {
+    const automatable = [
+      "MISSING_TITLE",
+      "MISSING_DESCRIPTION",
+      "EMPTY_ATTRIBUTE",
+      "REDUNDANT_ATTRIBUTE"
+    ];
+    return automatable.some((auto) => code.includes(auto));
+  }
+  static applyFix(document, fix) {
+    switch (fix.description) {
+      case "Add a title for screen readers":
+        if (!document.title) {
+          document.title = "SVG Document";
+        }
+        break;
+      case "Add a description for better accessibility":
+        if (!document.description) {
+          document.description = "An SVG graphic";
+        }
+        break;
+    }
+  }
+};
+
 // src/core/SvgDocumentProcessor.ts
 var SvgDocumentProcessor = class {
   renderer;
@@ -4389,7 +5551,8 @@ var SvgDocumentProcessor = class {
         ...spec.description && { description: spec.description }
       };
       if (spec.validate !== false) {
-        const validation = await this.validateDocument(document);
+        const validationPreset = typeof spec.validate === "string" ? spec.validate : "standard";
+        const validation = await this.validateDocument(document, validationPreset);
         errors.push(...validation.errors);
         warnings.push(...validation.warnings);
         if (!validation.valid) {
@@ -4397,7 +5560,74 @@ var SvgDocumentProcessor = class {
         }
       }
       const svg = await this.renderer.render(document);
-      const metadata = {
+      let metadata;
+      if (spec.generateMetadata !== false) {
+        metadata = await this.generateMetadata(document);
+      } else {
+        metadata = {
+          complexity: document.elements.length < 10 ? "low" : document.elements.length < 100 ? "medium" : "high",
+          features: [...new Set(document.elements.map((el) => el.type))],
+          accessibility: {
+            hasTitle: !!document.title,
+            hasDescription: !!document.description
+          },
+          compliance: "svg20"
+        };
+      }
+      const processingTime = Date.now() - startTime;
+      return { document, svg, warnings, errors, metadata, processingTime };
+    } catch (error) {
+      logger.error("Document processing failed", { error, spec });
+      throw error;
+    }
+  }
+  async validateDocument(document, preset = "standard") {
+    try {
+      const validationResult = await ValidationFactory.validateDocument(document, { preset });
+      const errors = validationResult.documentResult?.errors.map((e) => e.message) || [];
+      const warnings = validationResult.documentResult?.warnings.map((w) => w.message) || [];
+      if (validationResult.elementResults) {
+        for (const elementResult of validationResult.elementResults.values()) {
+          errors.push(...elementResult.errors.map((e) => e.message));
+          warnings.push(...elementResult.warnings.map((w) => w.message));
+        }
+      }
+      return {
+        valid: validationResult.overall.valid,
+        errors,
+        warnings,
+        validationResult
+      };
+    } catch (error) {
+      logger.error("Validation failed", { error, document });
+      return {
+        valid: false,
+        errors: ["Validation system error: " + error.message],
+        warnings: []
+      };
+    }
+  }
+  async generateMetadata(document) {
+    try {
+      const validationResult = await ValidationFactory.validateDocument(document, {
+        preset: "performance",
+        documentValidation: true,
+        elementValidation: false
+      });
+      const stats = validationResult.documentResult?.documentStats;
+      const accessibility = validationResult.documentResult?.accessibility;
+      return {
+        complexity: stats?.documentSize.complexity || "low",
+        features: Array.from(stats?.elementTypes.keys() || []),
+        accessibility: {
+          hasTitle: accessibility?.hasTitle || !!document.title,
+          hasDescription: accessibility?.hasDescription || !!document.description
+        },
+        compliance: validationResult.documentResult?.compliance.compliant ? "svg20" : "non-compliant"
+      };
+    } catch (error) {
+      logger.warn("Failed to generate enhanced metadata, using basic metadata", { error });
+      return {
         complexity: document.elements.length < 10 ? "low" : document.elements.length < 100 ? "medium" : "high",
         features: [...new Set(document.elements.map((el) => el.type))],
         accessibility: {
@@ -4406,27 +5636,7 @@ var SvgDocumentProcessor = class {
         },
         compliance: "svg20"
       };
-      const processingTime = Date.now() - startTime;
-      return { document, svg, warnings, errors, metadata, processingTime };
-    } catch (error) {
-      logger.error("Document processing failed", { error, spec });
-      throw error;
     }
-  }
-  async validateDocument(document) {
-    const errors = [];
-    const warnings = [];
-    if (document.viewBox.width <= 0) {
-      errors.push("ViewBox width must be positive");
-    }
-    if (document.viewBox.height <= 0) {
-      errors.push("ViewBox height must be positive");
-    }
-    return {
-      valid: errors.length === 0,
-      errors,
-      warnings
-    };
   }
   getProcessingStats() {
     return {
@@ -5531,6 +6741,169 @@ var SvgMcpServer = class extends FastMCP {
             text: JSON.stringify(health, null, 2)
           }]
         };
+      }
+    });
+    this.addTool({
+      name: "validate_svg",
+      description: "Validate an SVG document with comprehensive checks",
+      parameters: external_exports.object({
+        document: external_exports.object({
+          viewBox: external_exports.object({
+            x: external_exports.number(),
+            y: external_exports.number(),
+            width: external_exports.number().min(0),
+            height: external_exports.number().min(0)
+          }),
+          elements: external_exports.array(external_exports.any()),
+          title: external_exports.string().optional(),
+          description: external_exports.string().optional()
+        }),
+        preset: external_exports.enum(["strict", "standard", "minimal", "performance", "accessibility"]).default("standard"),
+        includeRecommendations: external_exports.boolean().default(true),
+        includeQuickFixes: external_exports.boolean().default(true)
+      }),
+      execute: async (args) => {
+        const { document, preset, includeRecommendations, includeQuickFixes } = args;
+        try {
+          logger.info("Validating SVG document", { preset, elementCount: document.elements?.length });
+          const svgDocument = {
+            viewBox: document.viewBox,
+            elements: document.elements || [],
+            ...document.title && { title: document.title },
+            ...document.description && { description: document.description }
+          };
+          const validationResult = await ValidationFactory.validateDocument(svgDocument, { preset });
+          const response = {
+            valid: validationResult.overall.valid,
+            score: validationResult.overall.score,
+            summary: validationResult.overall.summary,
+            errors: validationResult.documentResult?.errors || [],
+            warnings: validationResult.documentResult?.warnings || []
+          };
+          if (includeRecommendations) {
+            response.recommendations = validationResult.recommendations;
+          }
+          if (includeQuickFixes) {
+            response.quickFixes = validationResult.quickFixes;
+          }
+          if (validationResult.documentResult) {
+            response.reports = {
+              accessibility: validationResult.documentResult.accessibility,
+              performance: validationResult.documentResult.performance,
+              compliance: validationResult.documentResult.compliance,
+              documentStats: validationResult.documentResult.documentStats
+            };
+          }
+          logger.debug("Validation completed", {
+            valid: response.valid,
+            score: response.score,
+            errorCount: response.errors.length,
+            warningCount: response.warnings.length
+          });
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify(response, null, 2)
+            }]
+          };
+        } catch (error) {
+          logger.error("SVG validation failed", { error, document });
+          throw error;
+        }
+      }
+    });
+    this.addTool({
+      name: "quick_validate_svg",
+      description: "Quick validation for basic structure and critical errors",
+      parameters: external_exports.object({
+        document: external_exports.object({
+          viewBox: external_exports.object({
+            x: external_exports.number(),
+            y: external_exports.number(),
+            width: external_exports.number().min(0),
+            height: external_exports.number().min(0)
+          }),
+          elements: external_exports.array(external_exports.any())
+        })
+      }),
+      execute: async (args) => {
+        const { document } = args;
+        try {
+          const result = ValidationFactory.quickValidate(document);
+          logger.debug("Quick validation completed", result);
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify(result, null, 2)
+            }]
+          };
+        } catch (error) {
+          logger.error("Quick validation failed", { error, document });
+          throw error;
+        }
+      }
+    });
+    this.addTool({
+      name: "validate_and_fix_svg",
+      description: "Validate SVG document and apply automatic fixes where possible",
+      parameters: external_exports.object({
+        document: external_exports.object({
+          viewBox: external_exports.object({
+            x: external_exports.number(),
+            y: external_exports.number(),
+            width: external_exports.number().min(0),
+            height: external_exports.number().min(0)
+          }),
+          elements: external_exports.array(external_exports.any()),
+          title: external_exports.string().optional(),
+          description: external_exports.string().optional()
+        }),
+        preset: external_exports.enum(["strict", "standard", "minimal", "performance", "accessibility"]).default("standard")
+      }),
+      execute: async (args) => {
+        const { document, preset } = args;
+        try {
+          logger.info("Validating SVG document with auto-fix", { preset, elementCount: document.elements?.length });
+          const svgDocument = {
+            viewBox: document.viewBox,
+            elements: document.elements || [],
+            ...document.title && { title: document.title },
+            ...document.description && { description: document.description }
+          };
+          const result = await ValidationFactory.validateWithAutoFix(svgDocument, preset);
+          const response = {
+            original: {
+              valid: result.validationResult.overall.valid,
+              score: result.validationResult.overall.score,
+              summary: result.validationResult.overall.summary
+            },
+            autoFixApplied: !!result.autoFixedDocument,
+            appliedFixes: result.appliedFixes,
+            fixedDocument: result.autoFixedDocument
+          };
+          if (result.autoFixedDocument) {
+            const fixedValidation = await ValidationFactory.validateDocument(result.autoFixedDocument, { preset });
+            response.fixedValidation = {
+              valid: fixedValidation.overall.valid,
+              score: fixedValidation.overall.score,
+              summary: fixedValidation.overall.summary
+            };
+          }
+          logger.debug("Validation with auto-fix completed", {
+            fixesApplied: result.appliedFixes.length,
+            originalScore: response.original.score,
+            fixedScore: response.fixedValidation?.score
+          });
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify(response, null, 2)
+            }]
+          };
+        } catch (error) {
+          logger.error("SVG validation with auto-fix failed", { error, document });
+          throw error;
+        }
       }
     });
   }

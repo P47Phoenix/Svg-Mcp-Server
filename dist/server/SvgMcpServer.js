@@ -11,6 +11,7 @@ import { SvgRenderer } from '../core/SvgRenderer.js';
 import { SvgDocumentProcessor } from '../core/SvgDocumentProcessor.js';
 import { BasicShapeGenerator, ShapeCollections } from '../core/shapes/index.js';
 import { SvgValidationError } from '../types/svg.js';
+import { ValidationFactory } from '../core/validation/ValidationFactory.js';
 export class SvgMcpServer extends FastMCP {
     svgRenderer;
     documentProcessor;
@@ -358,6 +359,178 @@ export class SvgMcpServer extends FastMCP {
                             text: JSON.stringify(health, null, 2)
                         }]
                 };
+            }
+        });
+        // Tool: Validate SVG Document
+        this.addTool({
+            name: 'validate_svg',
+            description: 'Validate an SVG document with comprehensive checks',
+            parameters: z.object({
+                document: z.object({
+                    viewBox: z.object({
+                        x: z.number(),
+                        y: z.number(),
+                        width: z.number().min(0),
+                        height: z.number().min(0),
+                    }),
+                    elements: z.array(z.any()),
+                    title: z.string().optional(),
+                    description: z.string().optional(),
+                }),
+                preset: z.enum(['strict', 'standard', 'minimal', 'performance', 'accessibility']).default('standard'),
+                includeRecommendations: z.boolean().default(true),
+                includeQuickFixes: z.boolean().default(true),
+            }),
+            execute: async (args) => {
+                const { document, preset, includeRecommendations, includeQuickFixes } = args;
+                try {
+                    logger.info('Validating SVG document', { preset, elementCount: document.elements?.length });
+                    // Convert document args to proper SvgDocument format
+                    const svgDocument = {
+                        viewBox: document.viewBox,
+                        elements: document.elements || [],
+                        ...(document.title && { title: document.title }),
+                        ...(document.description && { description: document.description })
+                    };
+                    const validationResult = await ValidationFactory.validateDocument(svgDocument, { preset });
+                    const response = {
+                        valid: validationResult.overall.valid,
+                        score: validationResult.overall.score,
+                        summary: validationResult.overall.summary,
+                        errors: validationResult.documentResult?.errors || [],
+                        warnings: validationResult.documentResult?.warnings || [],
+                    };
+                    if (includeRecommendations) {
+                        response.recommendations = validationResult.recommendations;
+                    }
+                    if (includeQuickFixes) {
+                        response.quickFixes = validationResult.quickFixes;
+                    }
+                    if (validationResult.documentResult) {
+                        response.reports = {
+                            accessibility: validationResult.documentResult.accessibility,
+                            performance: validationResult.documentResult.performance,
+                            compliance: validationResult.documentResult.compliance,
+                            documentStats: validationResult.documentResult.documentStats,
+                        };
+                    }
+                    logger.debug('Validation completed', {
+                        valid: response.valid,
+                        score: response.score,
+                        errorCount: response.errors.length,
+                        warningCount: response.warnings.length
+                    });
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: JSON.stringify(response, null, 2)
+                            }]
+                    };
+                }
+                catch (error) {
+                    logger.error('SVG validation failed', { error, document });
+                    throw error;
+                }
+            }
+        });
+        // Tool: Quick Validate SVG
+        this.addTool({
+            name: 'quick_validate_svg',
+            description: 'Quick validation for basic structure and critical errors',
+            parameters: z.object({
+                document: z.object({
+                    viewBox: z.object({
+                        x: z.number(),
+                        y: z.number(),
+                        width: z.number().min(0),
+                        height: z.number().min(0),
+                    }),
+                    elements: z.array(z.any()),
+                }),
+            }),
+            execute: async (args) => {
+                const { document } = args;
+                try {
+                    const result = ValidationFactory.quickValidate(document);
+                    logger.debug('Quick validation completed', result);
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: JSON.stringify(result, null, 2)
+                            }]
+                    };
+                }
+                catch (error) {
+                    logger.error('Quick validation failed', { error, document });
+                    throw error;
+                }
+            }
+        });
+        // Tool: Validate with Auto-Fix
+        this.addTool({
+            name: 'validate_and_fix_svg',
+            description: 'Validate SVG document and apply automatic fixes where possible',
+            parameters: z.object({
+                document: z.object({
+                    viewBox: z.object({
+                        x: z.number(),
+                        y: z.number(),
+                        width: z.number().min(0),
+                        height: z.number().min(0),
+                    }),
+                    elements: z.array(z.any()),
+                    title: z.string().optional(),
+                    description: z.string().optional(),
+                }),
+                preset: z.enum(['strict', 'standard', 'minimal', 'performance', 'accessibility']).default('standard'),
+            }),
+            execute: async (args) => {
+                const { document, preset } = args;
+                try {
+                    logger.info('Validating SVG document with auto-fix', { preset, elementCount: document.elements?.length });
+                    // Convert document args to proper SvgDocument format
+                    const svgDocument = {
+                        viewBox: document.viewBox,
+                        elements: document.elements || [],
+                        ...(document.title && { title: document.title }),
+                        ...(document.description && { description: document.description })
+                    };
+                    const result = await ValidationFactory.validateWithAutoFix(svgDocument, preset);
+                    const response = {
+                        original: {
+                            valid: result.validationResult.overall.valid,
+                            score: result.validationResult.overall.score,
+                            summary: result.validationResult.overall.summary,
+                        },
+                        autoFixApplied: !!result.autoFixedDocument,
+                        appliedFixes: result.appliedFixes,
+                        fixedDocument: result.autoFixedDocument,
+                    };
+                    // If fixes were applied, validate the fixed document
+                    if (result.autoFixedDocument) {
+                        const fixedValidation = await ValidationFactory.validateDocument(result.autoFixedDocument, { preset });
+                        response.fixedValidation = {
+                            valid: fixedValidation.overall.valid,
+                            score: fixedValidation.overall.score,
+                            summary: fixedValidation.overall.summary,
+                        };
+                    }
+                    logger.debug('Validation with auto-fix completed', {
+                        fixesApplied: result.appliedFixes.length,
+                        originalScore: response.original.score,
+                        fixedScore: response.fixedValidation?.score
+                    });
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: JSON.stringify(response, null, 2)
+                            }]
+                    };
+                }
+                catch (error) {
+                    logger.error('SVG validation with auto-fix failed', { error, document });
+                    throw error;
+                }
             }
         });
     }

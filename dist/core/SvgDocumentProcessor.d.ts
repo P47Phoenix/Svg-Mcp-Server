@@ -2,6 +2,7 @@
  * SVG Document Processor
  */
 import { SvgDocument, SvgAnyElement, ViewBox } from '../types/svg.js';
+import { ValidationSuiteResult, ValidationPreset } from './validation/ValidationFactory.js';
 export interface SvgDocumentSpec {
     viewBox: ViewBox;
     elements: SvgAnyElement[];
@@ -10,7 +11,7 @@ export interface SvgDocumentSpec {
     title?: string;
     description?: string;
     optimize?: boolean;
-    validate?: boolean;
+    validate?: boolean | ValidationPreset;
     generateMetadata?: boolean;
 }
 export interface ProcessingResult {
@@ -22,7 +23,7 @@ export interface ProcessingResult {
     processingTime: number;
 }
 export interface DocumentMetadata {
-    complexity: 'low' | 'medium' | 'high';
+    complexity: 'low' | 'medium' | 'high' | 'extreme';
     features: string[];
     accessibility: {
         hasTitle: boolean;
@@ -34,11 +35,13 @@ export declare class SvgDocumentProcessor {
     private readonly renderer;
     constructor();
     processDocument(spec: SvgDocumentSpec): Promise<ProcessingResult>;
-    validateDocument(document: SvgDocument): Promise<{
+    validateDocument(document: SvgDocument, preset?: ValidationPreset): Promise<{
         valid: boolean;
         errors: string[];
         warnings: string[];
+        validationResult?: ValidationSuiteResult;
     }>;
+    generateMetadata(document: SvgDocument): Promise<DocumentMetadata>;
     getProcessingStats(): {
         totalDocuments: number;
         totalProcessingTime: number;
