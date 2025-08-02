@@ -8623,6 +8623,12 @@ var SvgTemplateFactory = class {
 };
 
 // src/server/SvgMcpServer.ts
+var SvgElementSchema = external_exports.object({
+  type: external_exports.string(),
+  attributes: external_exports.record(external_exports.any()).optional(),
+  children: external_exports.array(external_exports.lazy(() => SvgElementSchema)).optional(),
+  content: external_exports.string().optional()
+}).passthrough();
 var SvgMcpServer = class extends FastMCP {
   svgRenderer;
   documentProcessor;
@@ -8663,7 +8669,7 @@ var SvgMcpServer = class extends FastMCP {
             width: external_exports.number().min(0),
             height: external_exports.number().min(0)
           }),
-          elements: external_exports.array(external_exports.any()),
+          elements: external_exports.array(SvgElementSchema),
           width: external_exports.number().min(0).optional(),
           height: external_exports.number().min(0).optional(),
           title: external_exports.string().optional(),
@@ -8749,7 +8755,7 @@ var SvgMcpServer = class extends FastMCP {
             width: external_exports.number().min(0),
             height: external_exports.number().min(0)
           }),
-          elements: external_exports.array(external_exports.any())
+          elements: external_exports.array(SvgElementSchema)
         })
       }),
       execute: async (args) => {
@@ -8976,7 +8982,7 @@ var SvgMcpServer = class extends FastMCP {
             width: external_exports.number().min(0),
             height: external_exports.number().min(0)
           }),
-          elements: external_exports.array(external_exports.any()),
+          elements: external_exports.array(SvgElementSchema),
           title: external_exports.string().optional(),
           description: external_exports.string().optional()
         }),
@@ -9045,7 +9051,7 @@ var SvgMcpServer = class extends FastMCP {
             width: external_exports.number().min(0),
             height: external_exports.number().min(0)
           }),
-          elements: external_exports.array(external_exports.any())
+          elements: external_exports.array(SvgElementSchema)
         })
       }),
       execute: async (args) => {
@@ -9076,7 +9082,7 @@ var SvgMcpServer = class extends FastMCP {
             width: external_exports.number().min(0),
             height: external_exports.number().min(0)
           }),
-          elements: external_exports.array(external_exports.any()),
+          elements: external_exports.array(SvgElementSchema),
           title: external_exports.string().optional(),
           description: external_exports.string().optional()
         }),
@@ -9139,7 +9145,7 @@ var SvgMcpServer = class extends FastMCP {
             width: external_exports.number(),
             height: external_exports.number()
           }),
-          elements: external_exports.array(external_exports.any()),
+          elements: external_exports.array(SvgElementSchema),
           title: external_exports.string().optional(),
           description: external_exports.string().optional()
         }),
@@ -9217,7 +9223,7 @@ var SvgMcpServer = class extends FastMCP {
             width: external_exports.number(),
             height: external_exports.number()
           }),
-          elements: external_exports.array(external_exports.any()),
+          elements: external_exports.array(SvgElementSchema),
           title: external_exports.string().optional(),
           description: external_exports.string().optional()
         }),

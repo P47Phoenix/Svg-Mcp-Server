@@ -23,6 +23,14 @@ import {
   SvgTemplateFactory
 } from '../core/templates/index.js';
 
+// Schema for SVG elements - flexible but defined
+const SvgElementSchema: z.ZodType<any> = z.object({
+  type: z.string(),
+  attributes: z.record(z.any()).optional(),
+  children: z.array(z.lazy(() => SvgElementSchema)).optional(),
+  content: z.string().optional()
+}).passthrough();
+
 export interface SvgMcpServerConfig {
   name: string;
   version: string;
@@ -80,7 +88,7 @@ export class SvgMcpServer extends FastMCP {
             width: z.number().min(0),
             height: z.number().min(0),
           }),
-          elements: z.array(z.any()),
+          elements: z.array(SvgElementSchema),
           width: z.number().min(0).optional(),
           height: z.number().min(0).optional(),
           title: z.string().optional(),
@@ -179,7 +187,7 @@ export class SvgMcpServer extends FastMCP {
             width: z.number().min(0),
             height: z.number().min(0),
           }),
-          elements: z.array(z.any()),
+          elements: z.array(SvgElementSchema),
         }),
       }),
       execute: async (args) => {
@@ -442,7 +450,7 @@ export class SvgMcpServer extends FastMCP {
             width: z.number().min(0),
             height: z.number().min(0),
           }),
-          elements: z.array(z.any()),
+          elements: z.array(SvgElementSchema),
           title: z.string().optional(),
           description: z.string().optional(),
         }),
@@ -523,7 +531,7 @@ export class SvgMcpServer extends FastMCP {
             width: z.number().min(0),
             height: z.number().min(0),
           }),
-          elements: z.array(z.any()),
+          elements: z.array(SvgElementSchema),
         }),
       }),
       execute: async (args) => {
@@ -559,7 +567,7 @@ export class SvgMcpServer extends FastMCP {
             width: z.number().min(0),
             height: z.number().min(0),
           }),
-          elements: z.array(z.any()),
+          elements: z.array(SvgElementSchema),
           title: z.string().optional(),
           description: z.string().optional(),
         }),
@@ -633,7 +641,7 @@ export class SvgMcpServer extends FastMCP {
             width: z.number(),
             height: z.number()
           }),
-          elements: z.array(z.any()),
+          elements: z.array(SvgElementSchema),
           title: z.string().optional(),
           description: z.string().optional()
         }),
@@ -721,7 +729,7 @@ export class SvgMcpServer extends FastMCP {
             width: z.number(),
             height: z.number()
           }),
-          elements: z.array(z.any()),
+          elements: z.array(SvgElementSchema),
           title: z.string().optional(),
           description: z.string().optional()
         }),
