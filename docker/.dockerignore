@@ -1,0 +1,100 @@
+# Docker ignore file for SVG MCP Server
+# Prevents unnecessary files from being copied to Docker build context
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Coverage and test outputs
+coverage/
+.nyc_output
+*.lcov
+test-results/
+junit.xml
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Development files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Documentation (except essential docs)
+docs/
+*.md
+!README.md
+
+# GitHub and CI
+.github/
+.travis.yml
+.circleci/
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary folders
+.tmp/
+temp/
+
+# ESLint cache
+.eslintcache
+
+# Prettier
+.prettierrc*
+.prettierignore
+
+# TypeScript
+tsconfig.json
+tsconfig.*.json
+
+# Jest
+jest.config.*
+
+# Scripts (build scripts not needed in container)
+scripts/
+
+# Local development tools
+.editorconfig
+.husky/

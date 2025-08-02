@@ -15,6 +15,8 @@ export interface SvgMcpServerConfig {
 export declare class SvgMcpServer extends FastMCP {
     private svgRenderer;
     private documentProcessor;
+    private templateEngine;
+    private templateFactory;
     private config;
     constructor(config: SvgMcpServerConfig);
     private setupTools;

@@ -1,0 +1,299 @@
+name: Release Pipeline
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+env:
+  NODE_VERSION: '20'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  prepare-release:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Extract version information
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" == "release" ]; then
+          VERSION="${{ github.event.release.tag_name }}"
+        else
+          VERSION="${{ github.event.inputs.version }}"
+        fi
+        
+        # Remove 'v' prefix if present
+        CLEAN_VERSION=${VERSION#v}
+        
+        echo "version=$CLEAN_VERSION" >> $GITHUB_OUTPUT
+        echo "tag=$VERSION" >> $GITHUB_OUTPUT
+        echo "Release version: $CLEAN_VERSION"
+        echo "Release tag: $VERSION"
+
+  test-release:
+    name: Test Release Build
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 21.x]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run all tests
+      run: npm run test:all
+    
+    - name: Build application
+      run: npm run build
+    
+    - name: Validate build
+      run: |
+        if [ ! -f "dist/index.js" ]; then
+          echo "Release build failed - index.js not found"
+          exit 1
+        fi
+        echo "Release build validation passed"
+
+  build-release-docker:
+    name: Build Release Docker Images
+    needs: [prepare-release, test-release]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./docker/Dockerfile
+        target: production
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare-release.outputs.version }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare-release.outputs.tag }}
+        labels: |
+          org.opencontainers.image.title=SVG MCP Server
+          org.opencontainers.image.description=RFC 7996 compliant SVG generator MCP server
+          org.opencontainers.image.version=${{ needs.prepare-release.outputs.version }}
+          org.opencontainers.image.revision=${{ github.sha }}
+          org.opencontainers.image.created=${{ github.event.repository.updated_at }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  publish-npm:
+    name: Publish to NPM
+    needs: [prepare-release, test-release]
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'P47Phoenix' # Only publish from main repository
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        registry-url: 'https://registry.npmjs.org'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build application
+      run: npm run build
+    
+    - name: Update package version
+      run: npm version ${{ needs.prepare-release.outputs.version }} --no-git-tag-version
+    
+    - name: Publish to NPM
+      run: npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  create-github-release:
+    name: Create GitHub Release
+    needs: [prepare-release, test-release, build-release-docker]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Simple changelog generation
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        if [ -n "$PREVIOUS_TAG" ]; then
+          CHANGELOG=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD)
+        else
+          CHANGELOG=$(git log --pretty=format:"- %s (%h)" --max-count=10)
+        fi
+        
+        echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+        echo "## What's Changed" >> $GITHUB_OUTPUT
+        echo "$CHANGELOG" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...${{ needs.prepare-release.outputs.tag }}" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ needs.prepare-release.outputs.tag }}
+        release_name: Release ${{ needs.prepare-release.outputs.tag }}
+        body: ${{ steps.changelog.outputs.CHANGELOG }}
+        draft: false
+        prerelease: false
+
+  update-documentation:
+    name: Update Documentation
+    needs: [prepare-release, test-release]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Generate documentation
+      run: |
+        # Update version in documentation files
+        sed -i "s/version: '[^']*'/version: '${{ needs.prepare-release.outputs.version }}'/g" docker/Dockerfile
+        sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${{ needs.prepare-release.outputs.version }}\"/g" package.json
+        
+        # Generate API documentation if needed
+        if [ -f "scripts/generate-docs.js" ]; then
+          npm run docs:generate
+        fi
+    
+    - name: Commit documentation updates
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -A
+        git diff --quiet && git diff --staged --quiet || git commit -m "docs: update documentation for release ${{ needs.prepare-release.outputs.tag }}"
+        git push
+
+  notify-release:
+    name: Notify Release
+    needs: [prepare-release, build-release-docker, publish-npm, create-github-release]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Release notification
+      run: |
+        if [ "${{ contains(needs.*.result, 'failure') }}" == "true" ]; then
+          echo "❌ Release ${{ needs.prepare-release.outputs.tag }} failed"
+          echo "Failed jobs: ${{ toJson(needs.*.result) }}"
+        else
+          echo "🎉 Release ${{ needs.prepare-release.outputs.tag }} completed successfully!"
+          echo "- Docker images published"
+          echo "- NPM package published"
+          echo "- GitHub release created"
+          echo "- Documentation updated"
+        fi
+        
+        # Add your notification logic here (Slack, Discord, email, etc.)
+
+  security-scan-release:
+    name: Security Scan Release
+    needs: [prepare-release, build-release-docker]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.prepare-release.outputs.version }}'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  performance-benchmark-release:
+    name: Performance Benchmark Release
+    needs: [prepare-release, test-release]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run performance benchmarks
+      run: npm run test:performance
+    
+    - name: Upload performance baseline
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-baseline-${{ needs.prepare-release.outputs.version }}
+        path: performance-results.json
+        retention-days: 365

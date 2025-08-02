@@ -5,6 +5,8 @@ import { SvgValidationError } from '../types/svg.js';
 import { SvgRenderer } from './SvgRenderer.js';
 import { logger } from '../utils/logger.js';
 import { ValidationFactory } from './validation/ValidationFactory.js';
+import { SvgDocumentOptimizer, OptimizationPresets } from './optimization/SvgDocumentOptimizer.js';
+import { SvgTransformationEngine } from './optimization/SvgTransformationEngine.js';
 export class SvgDocumentProcessor {
     renderer;
     constructor() {
@@ -15,7 +17,7 @@ export class SvgDocumentProcessor {
         const errors = [];
         const warnings = [];
         try {
-            const document = {
+            let document = {
                 viewBox: spec.viewBox,
                 elements: spec.elements,
                 ...(spec.width !== undefined && { width: spec.width }),
@@ -23,6 +25,25 @@ export class SvgDocumentProcessor {
                 ...(spec.title && { title: spec.title }),
                 ...(spec.description && { description: spec.description })
             };
+            let optimizationResult;
+            let transformationResult;
+            // Apply transformations if specified
+            if (spec.transform && spec.transform.length > 0) {
+                const transformationEngine = new SvgTransformationEngine();
+                transformationResult = await transformationEngine.transformMultiple(document, spec.transform);
+                document = transformationResult.transformedDocument;
+                warnings.push(...transformationResult.appliedTransforms.map((t) => t.description));
+            }
+            // Apply optimization if specified
+            if (spec.optimize) {
+                const optimizationOptions = typeof spec.optimize === 'boolean'
+                    ? OptimizationPresets.BALANCED
+                    : spec.optimize;
+                const optimizer = new SvgDocumentOptimizer(optimizationOptions);
+                optimizationResult = await optimizer.optimize(document);
+                document = optimizationResult.optimizedDocument;
+                warnings.push(...optimizationResult.warnings);
+            }
             if (spec.validate !== false) {
                 const validationPreset = typeof spec.validate === 'string' ? spec.validate : 'standard';
                 const validation = await this.validateDocument(document, validationPreset);
@@ -46,11 +67,25 @@ export class SvgDocumentProcessor {
                         hasTitle: !!document.title,
                         hasDescription: !!document.description
                     },
-                    compliance: 'svg20'
+                    compliance: 'svg20',
+                    performance: {
+                        elementCount: document.elements.length,
+                        estimatedFileSize: svg.length,
+                        renderComplexity: document.elements.length < 50 ? 'low' : document.elements.length < 200 ? 'medium' : 'high'
+                    }
                 };
             }
             const processingTime = Date.now() - startTime;
-            return { document, svg, warnings, errors, metadata, processingTime };
+            return {
+                document,
+                svg,
+                warnings,
+                errors,
+                metadata,
+                processingTime,
+                ...(optimizationResult && { optimization: optimizationResult }),
+                ...(transformationResult && { transformation: transformationResult })
+            };
         }
         catch (error) {
             logger.error('Document processing failed', { error, spec });
@@ -85,6 +120,32 @@ export class SvgDocumentProcessor {
             };
         }
     }
+    /**
+     * Optimize an SVG document
+     */
+    async optimizeDocument(document, options) {
+        logger.info('Optimizing SVG document', { elementCount: document.elements.length });
+        const optimizer = new SvgDocumentOptimizer(options || OptimizationPresets.BALANCED);
+        return await optimizer.optimize(document);
+    }
+    /**
+     * Transform an SVG document
+     */
+    async transformDocument(document, transformation, params) {
+        logger.info('Transforming SVG document', { transformation, params });
+        const transformationEngine = new SvgTransformationEngine();
+        return await transformationEngine.transform(document, transformation, params);
+    }
+    /**
+     * Apply multiple transformations to an SVG document
+     */
+    async transformDocumentMultiple(document, transformations) {
+        logger.info('Applying multiple transformations to SVG document', {
+            count: transformations.length
+        });
+        const transformationEngine = new SvgTransformationEngine();
+        return await transformationEngine.transformMultiple(document, transformations);
+    }
     async generateMetadata(document) {
         try {
             // Use performance validation to get detailed stats
@@ -102,7 +163,12 @@ export class SvgDocumentProcessor {
                     hasTitle: accessibility?.hasTitle || !!document.title,
                     hasDescription: accessibility?.hasDescription || !!document.description
                 },
-                compliance: validationResult.documentResult?.compliance.compliant ? 'svg20' : 'non-compliant'
+                compliance: validationResult.documentResult?.compliance.compliant ? 'svg20' : 'non-compliant',
+                performance: {
+                    elementCount: document.elements.length,
+                    estimatedFileSize: JSON.stringify(document).length,
+                    renderComplexity: document.elements.length < 50 ? 'low' : document.elements.length < 200 ? 'medium' : 'high'
+                }
             };
         }
         catch (error) {
@@ -115,7 +181,12 @@ export class SvgDocumentProcessor {
                     hasTitle: !!document.title,
                     hasDescription: !!document.description
                 },
-                compliance: 'svg20'
+                compliance: 'svg20',
+                performance: {
+                    elementCount: document.elements.length,
+                    estimatedFileSize: JSON.stringify(document).length,
+                    renderComplexity: document.elements.length < 50 ? 'low' : document.elements.length < 200 ? 'medium' : 'high'
+                }
             };
         }
     }

@@ -12,9 +12,13 @@ import { SvgDocumentProcessor } from '../core/SvgDocumentProcessor.js';
 import { BasicShapeGenerator, ShapeCollections } from '../core/shapes/index.js';
 import { SvgValidationError } from '../types/svg.js';
 import { ValidationFactory } from '../core/validation/ValidationFactory.js';
+import { OptimizationPresets } from '../core/optimization/index.js';
+import { SvgTemplateEngine, SvgTemplateFactory } from '../core/templates/index.js';
 export class SvgMcpServer extends FastMCP {
     svgRenderer;
     documentProcessor;
+    templateEngine;
+    templateFactory;
     config;
     constructor(config) {
         super({
@@ -29,6 +33,10 @@ export class SvgMcpServer extends FastMCP {
         };
         this.svgRenderer = new SvgRenderer();
         this.documentProcessor = new SvgDocumentProcessor();
+        this.templateEngine = new SvgTemplateEngine();
+        this.templateFactory = new SvgTemplateFactory(this.templateEngine);
+        // Initialize template factory with built-in templates
+        this.templateFactory.initialize();
         if (this.config.enableDebug) {
             logger.setLogLevel('debug');
         }
@@ -529,6 +537,394 @@ export class SvgMcpServer extends FastMCP {
                 }
                 catch (error) {
                     logger.error('SVG validation with auto-fix failed', { error, document });
+                    throw error;
+                }
+            }
+        });
+        // Tool: Optimize SVG Document
+        this.addTool({
+            name: 'optimize_svg',
+            description: 'Optimize an SVG document for better performance and smaller file size',
+            parameters: z.object({
+                document: z.object({
+                    viewBox: z.object({
+                        x: z.number(),
+                        y: z.number(),
+                        width: z.number(),
+                        height: z.number()
+                    }),
+                    elements: z.array(z.any()),
+                    title: z.string().optional(),
+                    description: z.string().optional()
+                }),
+                preset: z.enum(['aggressive', 'balanced', 'conservative']).default('balanced'),
+                options: z.object({
+                    removeRedundantAttributes: z.boolean().optional(),
+                    simplifyPaths: z.boolean().optional(),
+                    mergeGroups: z.boolean().optional(),
+                    removeEmptyElements: z.boolean().optional(),
+                    optimizeViewBox: z.boolean().optional(),
+                    roundCoordinates: z.boolean().optional(),
+                    coordinatePrecision: z.number().optional(),
+                    preserveAccessibility: z.boolean().optional()
+                }).optional()
+            }),
+            execute: async (args) => {
+                const { document, preset = 'balanced', options } = args;
+                try {
+                    logger.info('Optimizing SVG document', { preset, elementCount: document.elements?.length });
+                    // Convert document args to proper SvgDocument format
+                    const svgDocument = {
+                        viewBox: document.viewBox,
+                        elements: document.elements || [],
+                        ...(document.title && { title: document.title }),
+                        ...(document.description && { description: document.description })
+                    };
+                    // Get optimization options
+                    let optimizationOptions;
+                    if (options) {
+                        optimizationOptions = options;
+                    }
+                    else {
+                        switch (preset) {
+                            case 'aggressive':
+                                optimizationOptions = OptimizationPresets.AGGRESSIVE;
+                                break;
+                            case 'conservative':
+                                optimizationOptions = OptimizationPresets.CONSERVATIVE;
+                                break;
+                            default:
+                                optimizationOptions = OptimizationPresets.BALANCED;
+                        }
+                    }
+                    const result = await this.documentProcessor.optimizeDocument(svgDocument, optimizationOptions);
+                    const response = {
+                        optimizedDocument: result.optimizedDocument,
+                        statistics: result.statistics,
+                        applied: result.applied,
+                        warnings: result.warnings,
+                        summary: {
+                            originalElements: result.statistics.originalElementCount,
+                            optimizedElements: result.statistics.optimizedElementCount,
+                            elementReduction: result.statistics.elementReduction,
+                            estimatedSizeReduction: `${result.statistics.estimatedSizeReduction}%`,
+                            optimizationsApplied: result.applied.length
+                        }
+                    };
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: JSON.stringify(response, null, 2)
+                            }]
+                    };
+                }
+                catch (error) {
+                    logger.error('SVG optimization failed', { error, document });
+                    throw error;
+                }
+            }
+        });
+        // Tool: Transform SVG Document
+        this.addTool({
+            name: 'transform_svg',
+            description: 'Apply geometric transformations to an SVG document',
+            parameters: z.object({
+                document: z.object({
+                    viewBox: z.object({
+                        x: z.number(),
+                        y: z.number(),
+                        width: z.number(),
+                        height: z.number()
+                    }),
+                    elements: z.array(z.any()),
+                    title: z.string().optional(),
+                    description: z.string().optional()
+                }),
+                transformation: z.enum(['scale', 'rotate', 'translate', 'flipHorizontal', 'flipVertical']),
+                parameters: z.object({
+                    scale: z.object({
+                        x: z.number(),
+                        y: z.number()
+                    }).optional(),
+                    rotate: z.object({
+                        angle: z.number(),
+                        centerX: z.number().optional(),
+                        centerY: z.number().optional()
+                    }).optional(),
+                    translate: z.object({
+                        x: z.number(),
+                        y: z.number()
+                    }).optional()
+                })
+            }),
+            execute: async (args) => {
+                const { document, transformation, parameters } = args;
+                try {
+                    logger.info('Transforming SVG document', { transformation, parameters });
+                    // Convert document args to proper SvgDocument format
+                    const svgDocument = {
+                        viewBox: document.viewBox,
+                        elements: document.elements || [],
+                        ...(document.title && { title: document.title }),
+                        ...(document.description && { description: document.description })
+                    };
+                    const result = await this.documentProcessor.transformDocument(svgDocument, transformation, parameters);
+                    const response = {
+                        transformedDocument: result.transformedDocument,
+                        appliedTransforms: result.appliedTransforms,
+                        metadata: result.metadata,
+                        summary: {
+                            transformation: transformation,
+                            originalBounds: result.metadata.originalBounds,
+                            transformedBounds: result.metadata.transformedBounds,
+                            scaleFactors: result.metadata.scaleFactors
+                        }
+                    };
+                    return {
+                        content: [{
+                                type: 'text',
+                                text: JSON.stringify(response, null, 2)
+                            }]
+                    };
+                }
+                catch (error) {
+                    logger.error('SVG transformation failed', { error, transformation, parameters });
+                    throw error;
+                }
+            }
+        });
+        // Template Tools
+        // Tool: List Templates
+        this.addTool({
+            name: 'list_templates',
+            description: 'List available SVG templates with optional filtering',
+            parameters: z.object({
+                query: z.string().optional().describe('Search query for template names/descriptions'),
+                tags: z.array(z.string()).optional().describe('Filter by tags'),
+                category: z.string().optional().describe('Filter by category'),
+                author: z.string().optional().describe('Filter by author'),
+            }),
+            execute: async (args) => {
+                const { query = '', tags = [], category, author } = args;
+                try {
+                    logger.info('Listing templates', { query, tags, category, author });
+                    const searchCriteria = {
+                        name: query,
+                        tags
+                    };
+                    if (category) {
+                        searchCriteria.category = category;
+                    }
+                    const allTemplates = this.templateEngine.searchTemplates(searchCriteria);
+                    let filteredTemplates = allTemplates;
+                    if (author) {
+                        filteredTemplates = allTemplates.filter(template => template.author && template.author.toLowerCase().includes(author.toLowerCase()));
+                    }
+                    return {
+                        type: 'text',
+                        text: JSON.stringify({
+                            templates: filteredTemplates.map(template => ({
+                                id: template.id,
+                                name: template.name,
+                                description: template.description,
+                                version: template.version,
+                                author: template.author,
+                                tags: template.tags,
+                                category: template.metadata.category,
+                                complexity: template.metadata.complexity,
+                                dimensions: template.metadata.dimensions,
+                                variableCount: template.variables.length,
+                                usageCount: template.metadata.usage.totalUses
+                            })),
+                            total: filteredTemplates.length
+                        }, null, 2)
+                    };
+                }
+                catch (error) {
+                    logger.error('Failed to list templates', { error });
+                    throw error;
+                }
+            }
+        });
+        // Tool: Get Template Details
+        this.addTool({
+            name: 'get_template',
+            description: 'Get detailed information about a specific template including variables',
+            parameters: z.object({
+                templateId: z.string().describe('Template ID to retrieve'),
+            }),
+            execute: async (args) => {
+                const { templateId } = args;
+                try {
+                    logger.info('Getting template details', { templateId });
+                    const template = this.templateEngine.getTemplate(templateId);
+                    if (!template) {
+                        throw new Error(`Template '${templateId}' not found`);
+                    }
+                    return {
+                        type: 'text',
+                        text: JSON.stringify({
+                            template: {
+                                id: template.id,
+                                name: template.name,
+                                description: template.description,
+                                version: template.version,
+                                author: template.author,
+                                tags: template.tags,
+                                category: template.metadata.category,
+                                complexity: template.metadata.complexity,
+                                dimensions: template.metadata.dimensions,
+                                variables: template.variables.map(variable => ({
+                                    name: variable.name,
+                                    type: variable.type,
+                                    defaultValue: variable.defaultValue,
+                                    description: variable.description,
+                                    required: variable.required,
+                                    constraints: variable.constraints
+                                })),
+                                usage: template.metadata.usage,
+                                createdAt: template.metadata.createdAt,
+                                updatedAt: template.metadata.updatedAt
+                            }
+                        }, null, 2)
+                    };
+                }
+                catch (error) {
+                    logger.error('Failed to get template details', { error, templateId });
+                    throw error;
+                }
+            }
+        });
+        // Tool: Instantiate Template
+        this.addTool({
+            name: 'instantiate_template',
+            description: 'Create an SVG instance from a template with custom variable values',
+            parameters: z.object({
+                templateId: z.string().describe('Template ID to instantiate'),
+                variables: z.record(z.any()).optional().describe('Variable values for template instantiation'),
+                renderSvg: z.boolean().default(true).describe('Whether to render SVG string'),
+            }),
+            execute: async (args) => {
+                const { templateId, variables = {}, renderSvg = true } = args;
+                try {
+                    logger.info('Instantiating template', { templateId, variables, renderSvg });
+                    const instance = await this.templateEngine.instantiateTemplate(templateId, variables);
+                    let svgString;
+                    if (renderSvg) {
+                        svgString = await this.svgRenderer.render(instance.document);
+                    }
+                    return {
+                        type: 'text',
+                        text: JSON.stringify({
+                            instance: {
+                                instanceId: instance.instanceId,
+                                templateId: instance.templateId,
+                                variables: instance.variables,
+                                createdAt: instance.metadata.createdAt,
+                                document: instance.document
+                            },
+                            svg: svgString
+                        }, null, 2)
+                    };
+                }
+                catch (error) {
+                    logger.error('Failed to instantiate template', { error, templateId, variables });
+                    throw error;
+                }
+            }
+        });
+        // Tool: Search Templates
+        this.addTool({
+            name: 'search_templates',
+            description: 'Search templates using advanced criteria and filters',
+            parameters: z.object({
+                query: z.string().optional().describe('Text search in name, description, and tags'),
+                tags: z.array(z.string()).optional().describe('Must match all specified tags'),
+                category: z.string().optional().describe('Template category filter'),
+                complexity: z.enum(['simple', 'intermediate', 'advanced']).optional().describe('Complexity level'),
+                dimensions: z.object({
+                    minWidth: z.number().optional(),
+                    maxWidth: z.number().optional(),
+                    minHeight: z.number().optional(),
+                    maxHeight: z.number().optional()
+                }).optional().describe('Dimension constraints'),
+                sortBy: z.enum(['name', 'usage', 'created', 'updated']).optional().describe('Sort criteria'),
+                sortOrder: z.enum(['asc', 'desc']).default('asc').describe('Sort order'),
+                limit: z.number().min(1).max(100).default(20).describe('Maximum results to return')
+            }),
+            execute: async (args) => {
+                const { query = '', tags = [], category, complexity, dimensions, sortBy = 'name', sortOrder = 'asc', limit = 20 } = args;
+                try {
+                    logger.info('Searching templates', {
+                        query, tags, category, complexity, dimensions, sortBy, sortOrder, limit
+                    });
+                    const searchCriteria = {
+                        name: query,
+                        tags
+                    };
+                    if (category) {
+                        searchCriteria.category = category;
+                    }
+                    let results = this.templateEngine.searchTemplates(searchCriteria);
+                    // Apply complexity filter
+                    if (complexity) {
+                        results = results.filter(template => template.metadata.complexity === complexity);
+                    }
+                    // Apply dimension filters
+                    if (dimensions) {
+                        results = results.filter(template => {
+                            const templateDims = template.metadata.dimensions;
+                            return ((!dimensions.minWidth || templateDims.width >= dimensions.minWidth) &&
+                                (!dimensions.maxWidth || templateDims.width <= dimensions.maxWidth) &&
+                                (!dimensions.minHeight || templateDims.height >= dimensions.minHeight) &&
+                                (!dimensions.maxHeight || templateDims.height <= dimensions.maxHeight));
+                        });
+                    }
+                    // Sort results
+                    results.sort((a, b) => {
+                        let comparison = 0;
+                        switch (sortBy) {
+                            case 'name':
+                                comparison = a.name.localeCompare(b.name);
+                                break;
+                            case 'usage':
+                                comparison = a.metadata.usage.totalUses - b.metadata.usage.totalUses;
+                                break;
+                            case 'created':
+                                comparison = a.metadata.createdAt.getTime() - b.metadata.createdAt.getTime();
+                                break;
+                            case 'updated':
+                                comparison = a.metadata.updatedAt.getTime() - b.metadata.updatedAt.getTime();
+                                break;
+                        }
+                        return sortOrder === 'desc' ? -comparison : comparison;
+                    });
+                    // Apply limit
+                    const limitedResults = results.slice(0, limit);
+                    return {
+                        type: 'text',
+                        text: JSON.stringify({
+                            results: limitedResults.map(template => ({
+                                id: template.id,
+                                name: template.name,
+                                description: template.description,
+                                version: template.version,
+                                author: template.author,
+                                tags: template.tags,
+                                category: template.metadata.category,
+                                complexity: template.metadata.complexity,
+                                dimensions: template.metadata.dimensions,
+                                variableCount: template.variables.length,
+                                usageCount: template.metadata.usage.totalUses
+                            })),
+                            total: limitedResults.length,
+                            totalMatches: results.length,
+                            hasMore: results.length > limit
+                        }, null, 2)
+                    };
+                }
+                catch (error) {
+                    logger.error('Failed to search templates', { error });
                     throw error;
                 }
             }

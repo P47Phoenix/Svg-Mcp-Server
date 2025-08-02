@@ -12,7 +12,14 @@ export default {
   // Module name mapping for ES modules
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^fastmcp$': 'fastmcp',
+    '^@modelcontextprotocol/(.*)$': '@modelcontextprotocol/$1'
   },
+  
+  // Transform ignore patterns to handle node_modules with ESM
+  transformIgnorePatterns: [
+    'node_modules/(?!(fastmcp|@modelcontextprotocol)/)',
+  ],
   
   // Transform configuration
   transform: {
@@ -41,13 +48,32 @@ export default {
     '!src/index.ts'
   ],
   
-  // Coverage thresholds
+  // Coverage thresholds - Enhanced for Task #12
   coverageThreshold: {
     global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80
+      branches: 95,
+      functions: 95,
+      lines: 95,
+      statements: 95
+    },
+    // Specific thresholds for critical components
+    'src/server/SvgMcpServer.ts': {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90
+    },
+    'src/core/templates/': {
+      branches: 95,
+      functions: 95,
+      lines: 95,
+      statements: 95
+    },
+    'src/core/validation/': {
+      branches: 98,
+      functions: 98,
+      lines: 98,
+      statements: 98
     }
   },
   

@@ -10,6 +10,19 @@ import {
   ValidationSuiteResult, 
   ValidationPreset
 } from './validation/ValidationFactory.js';
+import { 
+  SvgDocumentOptimizer, 
+  OptimizationOptions, 
+  OptimizationResult,
+  OptimizationPresets
+} from './optimization/SvgDocumentOptimizer.js';
+import { 
+  SvgTransformationEngine, 
+  TransformationType, 
+  TransformationParams, 
+  TransformationResult,
+  AppliedTransform
+} from './optimization/SvgTransformationEngine.js';
 
 export interface SvgDocumentSpec {
   viewBox: ViewBox;
@@ -18,9 +31,13 @@ export interface SvgDocumentSpec {
   height?: number;
   title?: string;
   description?: string;
-  optimize?: boolean;
+  optimize?: boolean | OptimizationOptions;
   validate?: boolean | ValidationPreset;
   generateMetadata?: boolean;
+  transform?: {
+    type: TransformationType;
+    params: TransformationParams;
+  }[];
 }
 
 export interface ProcessingResult {
@@ -30,6 +47,8 @@ export interface ProcessingResult {
   errors: string[];
   metadata: DocumentMetadata;
   processingTime: number;
+  optimization?: OptimizationResult;
+  transformation?: TransformationResult;
 }
 
 export interface DocumentMetadata {
@@ -40,6 +59,11 @@ export interface DocumentMetadata {
     hasDescription: boolean;
   };
   compliance?: string;
+  performance?: {
+    elementCount: number;
+    estimatedFileSize: number;
+    renderComplexity: 'low' | 'medium' | 'high';
+  };
 }
 
 export class SvgDocumentProcessor {
@@ -55,7 +79,7 @@ export class SvgDocumentProcessor {
     const warnings: string[] = [];
 
     try {
-      const document: SvgDocument = {
+      let document: SvgDocument = {
         viewBox: spec.viewBox,
         elements: spec.elements,
         ...(spec.width !== undefined && { width: spec.width }),
@@ -63,6 +87,29 @@ export class SvgDocumentProcessor {
         ...(spec.title && { title: spec.title }),
         ...(spec.description && { description: spec.description })
       };
+
+      let optimizationResult: OptimizationResult | undefined;
+      let transformationResult: TransformationResult | undefined;
+
+      // Apply transformations if specified
+      if (spec.transform && spec.transform.length > 0) {
+        const transformationEngine = new SvgTransformationEngine();
+        transformationResult = await transformationEngine.transformMultiple(document, spec.transform);
+        document = transformationResult.transformedDocument;
+        warnings.push(...transformationResult.appliedTransforms.map((t: AppliedTransform) => t.description));
+      }
+
+      // Apply optimization if specified
+      if (spec.optimize) {
+        const optimizationOptions = typeof spec.optimize === 'boolean' 
+          ? OptimizationPresets.BALANCED 
+          : spec.optimize;
+        
+        const optimizer = new SvgDocumentOptimizer(optimizationOptions);
+        optimizationResult = await optimizer.optimize(document);
+        document = optimizationResult.optimizedDocument;
+        warnings.push(...optimizationResult.warnings);
+      }
 
       if (spec.validate !== false) {
         const validationPreset = typeof spec.validate === 'string' ? spec.validate : 'standard';
@@ -89,13 +136,27 @@ export class SvgDocumentProcessor {
             hasTitle: !!document.title,
             hasDescription: !!document.description
           },
-          compliance: 'svg20'
+          compliance: 'svg20',
+          performance: {
+            elementCount: document.elements.length,
+            estimatedFileSize: svg.length,
+            renderComplexity: document.elements.length < 50 ? 'low' : document.elements.length < 200 ? 'medium' : 'high'
+          }
         };
       }
 
       const processingTime = Date.now() - startTime;
 
-      return { document, svg, warnings, errors, metadata, processingTime };
+      return { 
+        document, 
+        svg, 
+        warnings, 
+        errors, 
+        metadata, 
+        processingTime,
+        ...(optimizationResult && { optimization: optimizationResult }),
+        ...(transformationResult && { transformation: transformationResult })
+      };
 
     } catch (error) {
       logger.error('Document processing failed', { error, spec });
@@ -139,6 +200,48 @@ export class SvgDocumentProcessor {
     }
   }
 
+  /**
+   * Optimize an SVG document
+   */
+  async optimizeDocument(
+    document: SvgDocument, 
+    options?: OptimizationOptions
+  ): Promise<OptimizationResult> {
+    logger.info('Optimizing SVG document', { elementCount: document.elements.length });
+    
+    const optimizer = new SvgDocumentOptimizer(options || OptimizationPresets.BALANCED);
+    return await optimizer.optimize(document);
+  }
+
+  /**
+   * Transform an SVG document
+   */
+  async transformDocument(
+    document: SvgDocument,
+    transformation: TransformationType,
+    params: TransformationParams
+  ): Promise<TransformationResult> {
+    logger.info('Transforming SVG document', { transformation, params });
+    
+    const transformationEngine = new SvgTransformationEngine();
+    return await transformationEngine.transform(document, transformation, params);
+  }
+
+  /**
+   * Apply multiple transformations to an SVG document
+   */
+  async transformDocumentMultiple(
+    document: SvgDocument,
+    transformations: Array<{ type: TransformationType; params: TransformationParams }>
+  ): Promise<TransformationResult> {
+    logger.info('Applying multiple transformations to SVG document', { 
+      count: transformations.length 
+    });
+    
+    const transformationEngine = new SvgTransformationEngine();
+    return await transformationEngine.transformMultiple(document, transformations);
+  }
+
   async generateMetadata(document: SvgDocument): Promise<DocumentMetadata> {
     try {
       // Use performance validation to get detailed stats
@@ -158,7 +261,12 @@ export class SvgDocumentProcessor {
           hasTitle: accessibility?.hasTitle || !!document.title,
           hasDescription: accessibility?.hasDescription || !!document.description
         },
-        compliance: validationResult.documentResult?.compliance.compliant ? 'svg20' : 'non-compliant'
+        compliance: validationResult.documentResult?.compliance.compliant ? 'svg20' : 'non-compliant',
+        performance: {
+          elementCount: document.elements.length,
+          estimatedFileSize: JSON.stringify(document).length,
+          renderComplexity: document.elements.length < 50 ? 'low' : document.elements.length < 200 ? 'medium' : 'high'
+        }
       };
     } catch (error) {
       logger.warn('Failed to generate enhanced metadata, using basic metadata', { error });
@@ -171,7 +279,12 @@ export class SvgDocumentProcessor {
           hasTitle: !!document.title,
           hasDescription: !!document.description
         },
-        compliance: 'svg20'
+        compliance: 'svg20',
+        performance: {
+          elementCount: document.elements.length,
+          estimatedFileSize: JSON.stringify(document).length,
+          renderComplexity: document.elements.length < 50 ? 'low' : document.elements.length < 200 ? 'medium' : 'high'
+        }
       };
     }
   }

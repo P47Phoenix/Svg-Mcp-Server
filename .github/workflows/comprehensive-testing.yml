@@ -1,0 +1,376 @@
+name: Comprehensive Testing Suite
+# Task #12: Comprehensive Testing Infrastructure
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  NODE_VERSION: '20'
+  CACHE_VERSION: v1
+
+jobs:
+  test-matrix:
+    name: Test Suite (Node ${{ matrix.node-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['18', '20', '21']
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Lint code
+      run: npm run lint
+      
+    - name: Type check
+      run: npm run type-check
+      
+    - name: Build project
+      run: npm run build
+      
+    - name: Run unit tests
+      run: npm run test:unit
+      env:
+        NODE_OPTIONS: --max-old-space-size=4096
+        
+    - name: Run integration tests
+      run: npm run test:integration
+      env:
+        NODE_OPTIONS: --max-old-space-size=4096
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.os }}-node${{ matrix.node-version }}
+        path: |
+          coverage/
+          test-results/
+          
+  security-tests:
+    name: Security Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run security tests
+      run: npm run test:security
+      env:
+        NODE_OPTIONS: --max-old-space-size=4096
+        
+    - name: Security audit
+      run: npm audit --audit-level high
+      
+    - name: Scan for secrets
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+        
+    - name: Upload security test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-test-results
+        path: |
+          coverage/
+          security-results/
+
+  performance-tests:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build project
+      run: npm run build
+      
+    - name: Run performance tests
+      run: npm run test:performance
+      env:
+        NODE_OPTIONS: --max-old-space-size=8192 --expose-gc
+        
+    - name: Generate performance report
+      run: npm run performance:report
+      if: always()
+      
+    - name: Upload performance results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: performance-results
+        path: |
+          performance-results/
+          benchmarks/
+
+  compliance-tests:
+    name: RFC 7996 Compliance Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build project
+      run: npm run build
+      
+    - name: Run compliance tests
+      run: npm run test:compliance
+      env:
+        NODE_OPTIONS: --max-old-space-size=4096
+        
+    - name: Generate compliance report
+      run: npm run compliance:report
+      if: always()
+      
+    - name: Upload compliance results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: compliance-results
+        path: |
+          compliance-results/
+          rfc7996-validation/
+
+  coverage-report:
+    name: Coverage Analysis
+    runs-on: ubuntu-latest
+    needs: [test-matrix]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build project
+      run: npm run build
+      
+    - name: Run full test suite with coverage
+      run: npm run test:coverage
+      env:
+        NODE_OPTIONS: --max-old-space-size=8192
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+        
+    - name: Coverage report comment
+      uses: romeovs/lcov-reporter-action@v0.3.1
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        lcov-file: ./coverage/lcov.info
+        delete-old-comments: true
+        
+    - name: Enforce coverage thresholds
+      run: npm run coverage:check
+      
+  accessibility-tests:
+    name: Accessibility Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build project
+      run: npm run build
+      
+    - name: Run accessibility tests
+      run: npm run test:accessibility
+      env:
+        NODE_OPTIONS: --max-old-space-size=4096
+        
+    - name: Generate accessibility report
+      run: npm run accessibility:report
+      if: always()
+      
+    - name: Upload accessibility results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: accessibility-results
+        path: |
+          accessibility-results/
+          wcag-validation/
+
+  docker-tests:
+    name: Docker Container Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build Docker image
+      run: docker build -t svg-mcp-server:test .
+      
+    - name: Test Docker image
+      run: |
+        docker run --rm svg-mcp-server:test node -e "console.log('Docker build test passed')"
+        
+    - name: Run container health check
+      run: |
+        docker run -d --name test-container svg-mcp-server:test
+        sleep 10
+        docker exec test-container npm run health-check
+        docker stop test-container
+        docker rm test-container
+        
+    - name: Test container resource limits
+      run: |
+        docker run --rm --memory=512m --cpus=1.0 svg-mcp-server:test npm run test:unit
+
+  quality-gates:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    needs: [test-matrix, security-tests, performance-tests, compliance-tests, coverage-report]
+    if: always()
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+        
+    - name: Check test results
+      run: |
+        echo "Checking quality gates..."
+        
+        # Check if any critical tests failed
+        if [ "${{ needs.test-matrix.result }}" != "success" ]; then
+          echo "❌ Unit/Integration tests failed"
+          exit 1
+        fi
+        
+        if [ "${{ needs.security-tests.result }}" != "success" ]; then
+          echo "❌ Security tests failed"
+          exit 1
+        fi
+        
+        if [ "${{ needs.compliance-tests.result }}" != "success" ]; then
+          echo "❌ Compliance tests failed"  
+          exit 1
+        fi
+        
+        if [ "${{ needs.coverage-report.result }}" != "success" ]; then
+          echo "❌ Coverage requirements not met"
+          exit 1
+        fi
+        
+        echo "✅ All quality gates passed"
+        
+    - name: Generate quality report
+      run: |
+        echo "# Quality Report" > quality-report.md
+        echo "" >> quality-report.md
+        echo "## Test Results" >> quality-report.md
+        echo "- Unit/Integration Tests: ${{ needs.test-matrix.result }}" >> quality-report.md
+        echo "- Security Tests: ${{ needs.security-tests.result }}" >> quality-report.md
+        echo "- Performance Tests: ${{ needs.performance-tests.result }}" >> quality-report.md
+        echo "- Compliance Tests: ${{ needs.compliance-tests.result }}" >> quality-report.md
+        echo "- Coverage Analysis: ${{ needs.coverage-report.result }}" >> quality-report.md
+        echo "" >> quality-report.md
+        echo "Generated: $(date)" >> quality-report.md
+        
+    - name: Upload quality report
+      uses: actions/upload-artifact@v4
+      with:
+        name: quality-report
+        path: quality-report.md
+
+  notification:
+    name: Test Results Notification
+    runs-on: ubuntu-latest
+    needs: [quality-gates]
+    if: always() && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Notify on success
+      if: needs.quality-gates.result == 'success'
+      run: |
+        echo "✅ All tests passed successfully on main branch"
+        # Add notification logic here (Slack, Teams, etc.)
+        
+    - name: Notify on failure
+      if: needs.quality-gates.result != 'success'
+      run: |
+        echo "❌ Test failures detected on main branch"
+        # Add notification logic here (Slack, Teams, etc.)
+        exit 1

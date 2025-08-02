@@ -5531,6 +5531,721 @@ var ValidationFactory = class {
   }
 };
 
+// src/core/optimization/SvgDocumentOptimizer.ts
+var SvgDocumentOptimizer = class {
+  options;
+  constructor(options = {}) {
+    this.options = {
+      removeEmptyElements: options.removeEmptyElements ?? true,
+      removeRedundantAttributes: options.removeRedundantAttributes ?? true,
+      roundCoordinates: options.roundCoordinates ?? true,
+      coordinatePrecision: options.coordinatePrecision ?? 2,
+      preserveAccessibility: options.preserveAccessibility ?? true
+    };
+  }
+  /**
+   * Optimize an SVG document
+   */
+  async optimize(document) {
+    logger.info("Starting SVG document optimization", {
+      elementCount: document.elements.length
+    });
+    const originalDocument = JSON.parse(JSON.stringify(document));
+    let optimizedDocument = JSON.parse(JSON.stringify(document));
+    const statistics = {
+      originalElementCount: this.countElements(originalDocument),
+      optimizedElementCount: 0,
+      elementReduction: 0,
+      coordinatesRounded: 0,
+      attributesRemoved: 0,
+      estimatedSizeReduction: 0
+    };
+    const applied = [];
+    const warnings = [];
+    try {
+      if (this.options.removeEmptyElements) {
+        const result = this.removeEmptyElements(optimizedDocument);
+        optimizedDocument = result.document;
+        if (result.removedCount > 0) {
+          applied.push({
+            type: "remove_empty_elements",
+            description: `Removed ${result.removedCount} empty elements`,
+            impact: "medium",
+            elementCount: result.removedCount
+          });
+        }
+      }
+      if (this.options.removeRedundantAttributes) {
+        const result = this.removeRedundantAttributes(optimizedDocument);
+        optimizedDocument = result.document;
+        statistics.attributesRemoved = result.removedCount;
+        if (result.removedCount > 0) {
+          applied.push({
+            type: "remove_redundant_attributes",
+            description: `Removed ${result.removedCount} redundant attributes`,
+            impact: "low"
+          });
+        }
+      }
+      if (this.options.roundCoordinates) {
+        const result = this.roundCoordinates(optimizedDocument);
+        optimizedDocument = result.document;
+        statistics.coordinatesRounded = result.roundedCount;
+        if (result.roundedCount > 0) {
+          applied.push({
+            type: "round_coordinates",
+            description: `Rounded ${result.roundedCount} coordinates to ${this.options.coordinatePrecision} decimal places`,
+            impact: "low"
+          });
+        }
+      }
+      statistics.optimizedElementCount = this.countElements(optimizedDocument);
+      statistics.elementReduction = statistics.originalElementCount - statistics.optimizedElementCount;
+      statistics.estimatedSizeReduction = this.calculateSizeReduction(originalDocument, optimizedDocument);
+      logger.info("SVG optimization completed", {
+        originalElements: statistics.originalElementCount,
+        optimizedElements: statistics.optimizedElementCount,
+        reduction: statistics.elementReduction
+      });
+      return {
+        originalDocument,
+        optimizedDocument,
+        statistics,
+        applied,
+        warnings
+      };
+    } catch (error) {
+      logger.error("SVG optimization failed", { error, document });
+      throw error;
+    }
+  }
+  /**
+   * Remove empty elements (groups with no children, etc.)
+   */
+  removeEmptyElements(document) {
+    let removedCount = 0;
+    const cleanElements = (elements) => {
+      return elements.filter((element) => {
+        if (element.type === "group") {
+          const groupElement = element;
+          if (groupElement.children) {
+            groupElement.children = cleanElements(groupElement.children);
+            if (groupElement.children.length === 0) {
+              removedCount++;
+              return false;
+            }
+          }
+        }
+        return true;
+      });
+    };
+    document.elements = cleanElements(document.elements);
+    return { document, removedCount };
+  }
+  /**
+   * Remove redundant attributes (default values)
+   */
+  removeRedundantAttributes(document) {
+    let removedCount = 0;
+    const cleanElement = (element) => {
+      const cleaned = { ...element };
+      if (cleaned.style) {
+        const style = { ...cleaned.style };
+        if (style.fill === "black") {
+          delete style.fill;
+          removedCount++;
+        }
+        if (style.strokeWidth === 1) {
+          delete style.strokeWidth;
+          removedCount++;
+        }
+        if (style.opacity === 1) {
+          delete style.opacity;
+          removedCount++;
+        }
+        if (Object.keys(style).length === 0) {
+          delete cleaned.style;
+        } else {
+          cleaned.style = style;
+        }
+      }
+      if (element.type === "group") {
+        const groupElement = element;
+        if (groupElement.children) {
+          cleaned.children = groupElement.children.map(cleanElement);
+        }
+      }
+      return cleaned;
+    };
+    document.elements = document.elements.map(cleanElement);
+    return { document, removedCount };
+  }
+  /**
+   * Round coordinates to specified precision
+   */
+  roundCoordinates(document) {
+    let roundedCount = 0;
+    const precision = this.options.coordinatePrecision;
+    const roundNumber = (num) => {
+      const rounded = Math.round(num * Math.pow(10, precision)) / Math.pow(10, precision);
+      if (rounded !== num)
+        roundedCount++;
+      return rounded;
+    };
+    const processElement = (element) => {
+      const processed = { ...element };
+      switch (element.type) {
+        case "circle": {
+          const circleEl = element;
+          if (circleEl.cx !== void 0)
+            processed.cx = roundNumber(circleEl.cx);
+          if (circleEl.cy !== void 0)
+            processed.cy = roundNumber(circleEl.cy);
+          if (circleEl.r !== void 0)
+            processed.r = roundNumber(circleEl.r);
+          break;
+        }
+        case "rect": {
+          const rectEl = element;
+          if (rectEl.x !== void 0)
+            processed.x = roundNumber(rectEl.x);
+          if (rectEl.y !== void 0)
+            processed.y = roundNumber(rectEl.y);
+          if (rectEl.width !== void 0)
+            processed.width = roundNumber(rectEl.width);
+          if (rectEl.height !== void 0)
+            processed.height = roundNumber(rectEl.height);
+          if (rectEl.rx !== void 0)
+            processed.rx = roundNumber(rectEl.rx);
+          if (rectEl.ry !== void 0)
+            processed.ry = roundNumber(rectEl.ry);
+          break;
+        }
+        case "line": {
+          const lineEl = element;
+          if (lineEl.x1 !== void 0)
+            processed.x1 = roundNumber(lineEl.x1);
+          if (lineEl.y1 !== void 0)
+            processed.y1 = roundNumber(lineEl.y1);
+          if (lineEl.x2 !== void 0)
+            processed.x2 = roundNumber(lineEl.x2);
+          if (lineEl.y2 !== void 0)
+            processed.y2 = roundNumber(lineEl.y2);
+          break;
+        }
+        case "text": {
+          const textEl = element;
+          if (textEl.x !== void 0)
+            processed.x = roundNumber(textEl.x);
+          if (textEl.y !== void 0)
+            processed.y = roundNumber(textEl.y);
+          break;
+        }
+        case "group": {
+          const groupEl = element;
+          if (groupEl.children) {
+            processed.children = groupEl.children.map(processElement);
+          }
+          break;
+        }
+      }
+      return processed;
+    };
+    document.elements = document.elements.map(processElement);
+    const originalViewBox = document.viewBox;
+    document.viewBox = {
+      x: roundNumber(originalViewBox.x),
+      y: roundNumber(originalViewBox.y),
+      width: roundNumber(originalViewBox.width),
+      height: roundNumber(originalViewBox.height)
+    };
+    return { document, roundedCount };
+  }
+  /**
+   * Count total number of elements
+   */
+  countElements(document) {
+    const countInElements = (elements) => {
+      return elements.reduce((count, element) => {
+        if (element.type === "group") {
+          const groupEl = element;
+          return count + 1 + (groupEl.children ? countInElements(groupEl.children) : 0);
+        }
+        return count + 1;
+      }, 0);
+    };
+    return countInElements(document.elements);
+  }
+  /**
+   * Calculate estimated size reduction
+   */
+  calculateSizeReduction(original, optimized) {
+    const originalSize = JSON.stringify(original).length;
+    const optimizedSize = JSON.stringify(optimized).length;
+    return Math.round((originalSize - optimizedSize) / originalSize * 100);
+  }
+};
+var OptimizationPresets = class {
+  static AGGRESSIVE = {
+    removeEmptyElements: true,
+    removeRedundantAttributes: true,
+    roundCoordinates: true,
+    coordinatePrecision: 1,
+    preserveAccessibility: true
+  };
+  static BALANCED = {
+    removeEmptyElements: true,
+    removeRedundantAttributes: true,
+    roundCoordinates: true,
+    coordinatePrecision: 2,
+    preserveAccessibility: true
+  };
+  static CONSERVATIVE = {
+    removeEmptyElements: true,
+    removeRedundantAttributes: false,
+    roundCoordinates: true,
+    coordinatePrecision: 3,
+    preserveAccessibility: true
+  };
+};
+
+// src/core/optimization/SvgTransformationEngine.ts
+var SvgTransformationEngine = class {
+  /**
+   * Apply geometric transformation to document
+   */
+  async transform(document, transformation, params) {
+    logger.info("Applying SVG transformation", { transformation, params });
+    const originalDocument = JSON.parse(JSON.stringify(document));
+    let transformedDocument = JSON.parse(JSON.stringify(document));
+    const originalBounds = this.calculateDocumentBounds(originalDocument);
+    try {
+      switch (transformation) {
+        case "scale":
+          transformedDocument = this.applyScale(transformedDocument, params.scale);
+          break;
+        case "translate":
+          transformedDocument = this.applyTranslation(transformedDocument, params.translate);
+          break;
+        case "rotate":
+          transformedDocument = this.applyRotation(transformedDocument, params.rotate);
+          break;
+        case "flipHorizontal":
+          transformedDocument = this.applyHorizontalFlip(transformedDocument);
+          break;
+        case "flipVertical":
+          transformedDocument = this.applyVerticalFlip(transformedDocument);
+          break;
+        default:
+          throw new Error(`Unsupported transformation type: ${transformation}`);
+      }
+      const transformedBounds = this.calculateDocumentBounds(transformedDocument);
+      const result = {
+        originalDocument,
+        transformedDocument,
+        appliedTransforms: [{
+          type: transformation,
+          parameters: params,
+          elementCount: this.countElements(transformedDocument),
+          description: this.getTransformationDescription(transformation, params)
+        }],
+        metadata: {
+          originalBounds,
+          transformedBounds,
+          scaleFactors: this.calculateScaleFactors(originalBounds, transformedBounds),
+          rotationAngle: params.rotate?.angle || 0,
+          translation: params.translate || { x: 0, y: 0 }
+        }
+      };
+      logger.info("SVG transformation completed", {
+        transformation,
+        originalBounds,
+        transformedBounds
+      });
+      return result;
+    } catch (error) {
+      logger.error("SVG transformation failed", { error, transformation, params });
+      throw error;
+    }
+  }
+  /**
+   * Apply multiple transformations in sequence
+   */
+  async transformMultiple(document, transformations) {
+    logger.info("Applying multiple SVG transformations", { count: transformations.length });
+    const originalDocument = JSON.parse(JSON.stringify(document));
+    let currentDocument = JSON.parse(JSON.stringify(document));
+    const appliedTransforms = [];
+    for (const { type, params } of transformations) {
+      const result = await this.transform(currentDocument, type, params);
+      currentDocument = result.transformedDocument;
+      appliedTransforms.push(...result.appliedTransforms);
+    }
+    const originalBounds = this.calculateDocumentBounds(originalDocument);
+    const transformedBounds = this.calculateDocumentBounds(currentDocument);
+    return {
+      originalDocument,
+      transformedDocument: currentDocument,
+      appliedTransforms,
+      metadata: {
+        originalBounds,
+        transformedBounds,
+        scaleFactors: this.calculateScaleFactors(originalBounds, transformedBounds),
+        rotationAngle: appliedTransforms.filter((t) => t.type === "rotate").reduce((sum, t) => sum + (t.parameters.rotate?.angle || 0), 0),
+        translation: appliedTransforms.filter((t) => t.type === "translate").reduce((acc, t) => ({
+          x: acc.x + (t.parameters.translate?.x || 0),
+          y: acc.y + (t.parameters.translate?.y || 0)
+        }), { x: 0, y: 0 })
+      }
+    };
+  }
+  // ===== PRIVATE TRANSFORMATION METHODS =====
+  /**
+   * Apply scale transformation
+   */
+  applyScale(document, scale) {
+    const transformElement = (element) => {
+      const transformed = { ...element };
+      switch (element.type) {
+        case "circle": {
+          const circleEl = element;
+          if (circleEl.cx !== void 0)
+            transformed.cx = circleEl.cx * scale.x;
+          if (circleEl.cy !== void 0)
+            transformed.cy = circleEl.cy * scale.y;
+          if (circleEl.r !== void 0)
+            transformed.r = circleEl.r * Math.min(scale.x, scale.y);
+          break;
+        }
+        case "rect": {
+          const rectEl = element;
+          if (rectEl.x !== void 0)
+            transformed.x = rectEl.x * scale.x;
+          if (rectEl.y !== void 0)
+            transformed.y = rectEl.y * scale.y;
+          if (rectEl.width !== void 0)
+            transformed.width = rectEl.width * scale.x;
+          if (rectEl.height !== void 0)
+            transformed.height = rectEl.height * scale.y;
+          if (rectEl.rx !== void 0)
+            transformed.rx = rectEl.rx * scale.x;
+          if (rectEl.ry !== void 0)
+            transformed.ry = rectEl.ry * scale.y;
+          break;
+        }
+        case "line": {
+          const lineEl = element;
+          if (lineEl.x1 !== void 0)
+            transformed.x1 = lineEl.x1 * scale.x;
+          if (lineEl.y1 !== void 0)
+            transformed.y1 = lineEl.y1 * scale.y;
+          if (lineEl.x2 !== void 0)
+            transformed.x2 = lineEl.x2 * scale.x;
+          if (lineEl.y2 !== void 0)
+            transformed.y2 = lineEl.y2 * scale.y;
+          break;
+        }
+        case "text": {
+          const textEl = element;
+          if (textEl.x !== void 0)
+            transformed.x = textEl.x * scale.x;
+          if (textEl.y !== void 0)
+            transformed.y = textEl.y * scale.y;
+          break;
+        }
+        case "group": {
+          const groupEl = element;
+          if (groupEl.children) {
+            transformed.children = groupEl.children.map(transformElement);
+          }
+          break;
+        }
+      }
+      return transformed;
+    };
+    document.elements = document.elements.map(transformElement);
+    document.viewBox = {
+      x: document.viewBox.x * scale.x,
+      y: document.viewBox.y * scale.y,
+      width: document.viewBox.width * scale.x,
+      height: document.viewBox.height * scale.y
+    };
+    return document;
+  }
+  /**
+   * Apply translation transformation
+   */
+  applyTranslation(document, translation) {
+    const transformElement = (element) => {
+      const transformed = { ...element };
+      switch (element.type) {
+        case "circle": {
+          const circleEl = element;
+          if (circleEl.cx !== void 0)
+            transformed.cx = circleEl.cx + translation.x;
+          if (circleEl.cy !== void 0)
+            transformed.cy = circleEl.cy + translation.y;
+          break;
+        }
+        case "rect": {
+          const rectEl = element;
+          if (rectEl.x !== void 0)
+            transformed.x = rectEl.x + translation.x;
+          if (rectEl.y !== void 0)
+            transformed.y = rectEl.y + translation.y;
+          break;
+        }
+        case "line": {
+          const lineEl = element;
+          if (lineEl.x1 !== void 0)
+            transformed.x1 = lineEl.x1 + translation.x;
+          if (lineEl.y1 !== void 0)
+            transformed.y1 = lineEl.y1 + translation.y;
+          if (lineEl.x2 !== void 0)
+            transformed.x2 = lineEl.x2 + translation.x;
+          if (lineEl.y2 !== void 0)
+            transformed.y2 = lineEl.y2 + translation.y;
+          break;
+        }
+        case "text": {
+          const textEl = element;
+          if (textEl.x !== void 0)
+            transformed.x = textEl.x + translation.x;
+          if (textEl.y !== void 0)
+            transformed.y = textEl.y + translation.y;
+          break;
+        }
+        case "group": {
+          const groupEl = element;
+          if (groupEl.children) {
+            transformed.children = groupEl.children.map(transformElement);
+          }
+          break;
+        }
+      }
+      return transformed;
+    };
+    document.elements = document.elements.map(transformElement);
+    return document;
+  }
+  /**
+   * Apply rotation transformation
+   */
+  applyRotation(document, rotation) {
+    const bounds = this.calculateDocumentBounds(document);
+    const centerX = rotation.centerX ?? bounds.centerX;
+    const centerY = rotation.centerY ?? bounds.centerY;
+    const angleRad = rotation.angle * Math.PI / 180;
+    const rotatePoint = (x, y) => {
+      const translatedX = x - centerX;
+      const translatedY = y - centerY;
+      return {
+        x: translatedX * Math.cos(angleRad) - translatedY * Math.sin(angleRad) + centerX,
+        y: translatedX * Math.sin(angleRad) + translatedY * Math.cos(angleRad) + centerY
+      };
+    };
+    const transformElement = (element) => {
+      const transformed = { ...element };
+      switch (element.type) {
+        case "circle": {
+          const circleEl = element;
+          if (circleEl.cx !== void 0 && circleEl.cy !== void 0) {
+            const rotatedCenter = rotatePoint(circleEl.cx, circleEl.cy);
+            transformed.cx = rotatedCenter.x;
+            transformed.cy = rotatedCenter.y;
+          }
+          break;
+        }
+        case "rect": {
+          const rectEl = element;
+          if (rectEl.x !== void 0 && rectEl.y !== void 0) {
+            const rotatedCorner = rotatePoint(rectEl.x, rectEl.y);
+            transformed.x = rotatedCorner.x;
+            transformed.y = rotatedCorner.y;
+          }
+          break;
+        }
+        case "line": {
+          const lineEl = element;
+          if (lineEl.x1 !== void 0 && lineEl.y1 !== void 0) {
+            const rotatedStart = rotatePoint(lineEl.x1, lineEl.y1);
+            transformed.x1 = rotatedStart.x;
+            transformed.y1 = rotatedStart.y;
+          }
+          if (lineEl.x2 !== void 0 && lineEl.y2 !== void 0) {
+            const rotatedEnd = rotatePoint(lineEl.x2, lineEl.y2);
+            transformed.x2 = rotatedEnd.x;
+            transformed.y2 = rotatedEnd.y;
+          }
+          break;
+        }
+        case "text": {
+          const textEl = element;
+          if (textEl.x !== void 0 && textEl.y !== void 0) {
+            const rotatedText = rotatePoint(textEl.x, textEl.y);
+            transformed.x = rotatedText.x;
+            transformed.y = rotatedText.y;
+          }
+          break;
+        }
+        case "group": {
+          const groupEl = element;
+          if (groupEl.children) {
+            transformed.children = groupEl.children.map(transformElement);
+          }
+          break;
+        }
+      }
+      return transformed;
+    };
+    document.elements = document.elements.map(transformElement);
+    return document;
+  }
+  /**
+   * Apply horizontal flip
+   */
+  applyHorizontalFlip(document) {
+    return this.applyReflection(document, { axis: "y" });
+  }
+  /**
+   * Apply vertical flip
+   */
+  applyVerticalFlip(document) {
+    return this.applyReflection(document, { axis: "x" });
+  }
+  /**
+   * Apply reflection transformation
+   */
+  applyReflection(document, reflection) {
+    const bounds = this.calculateDocumentBounds(document);
+    const reflectPoint = (x, y) => {
+      let newX = x;
+      let newY = y;
+      if (reflection.axis === "x") {
+        newY = bounds.y + bounds.height - (y - bounds.y);
+      }
+      if (reflection.axis === "y") {
+        newX = bounds.x + bounds.width - (x - bounds.x);
+      }
+      return { x: newX, y: newY };
+    };
+    const transformElement = (element) => {
+      const transformed = { ...element };
+      switch (element.type) {
+        case "circle": {
+          const circleEl = element;
+          if (circleEl.cx !== void 0 && circleEl.cy !== void 0) {
+            const reflectedCenter = reflectPoint(circleEl.cx, circleEl.cy);
+            transformed.cx = reflectedCenter.x;
+            transformed.cy = reflectedCenter.y;
+          }
+          break;
+        }
+        case "rect": {
+          const rectEl = element;
+          if (rectEl.x !== void 0 && rectEl.y !== void 0) {
+            const reflectedCorner = reflectPoint(rectEl.x, rectEl.y);
+            transformed.x = reflectedCorner.x;
+            transformed.y = reflectedCorner.y;
+          }
+          break;
+        }
+        case "line": {
+          const lineEl = element;
+          if (lineEl.x1 !== void 0 && lineEl.y1 !== void 0) {
+            const reflectedStart = reflectPoint(lineEl.x1, lineEl.y1);
+            transformed.x1 = reflectedStart.x;
+            transformed.y1 = reflectedStart.y;
+          }
+          if (lineEl.x2 !== void 0 && lineEl.y2 !== void 0) {
+            const reflectedEnd = reflectPoint(lineEl.x2, lineEl.y2);
+            transformed.x2 = reflectedEnd.x;
+            transformed.y2 = reflectedEnd.y;
+          }
+          break;
+        }
+        case "text": {
+          const textEl = element;
+          if (textEl.x !== void 0 && textEl.y !== void 0) {
+            const reflectedText = reflectPoint(textEl.x, textEl.y);
+            transformed.x = reflectedText.x;
+            transformed.y = reflectedText.y;
+          }
+          break;
+        }
+        case "group": {
+          const groupEl = element;
+          if (groupEl.children) {
+            transformed.children = groupEl.children.map(transformElement);
+          }
+          break;
+        }
+      }
+      return transformed;
+    };
+    document.elements = document.elements.map(transformElement);
+    return document;
+  }
+  // ===== HELPER METHODS =====
+  /**
+   * Calculate document bounds
+   */
+  calculateDocumentBounds(document) {
+    const viewBox = document.viewBox;
+    return {
+      x: viewBox.x,
+      y: viewBox.y,
+      width: viewBox.width,
+      height: viewBox.height,
+      centerX: viewBox.x + viewBox.width / 2,
+      centerY: viewBox.y + viewBox.height / 2
+    };
+  }
+  /**
+   * Calculate scale factors
+   */
+  calculateScaleFactors(original, transformed) {
+    return {
+      x: original.width !== 0 ? transformed.width / original.width : 1,
+      y: original.height !== 0 ? transformed.height / original.height : 1
+    };
+  }
+  /**
+   * Count elements in document
+   */
+  countElements(document) {
+    const countInElements = (elements) => {
+      return elements.reduce((count, element) => {
+        if (element.type === "group") {
+          const groupEl = element;
+          return count + 1 + (groupEl.children ? countInElements(groupEl.children) : 0);
+        }
+        return count + 1;
+      }, 0);
+    };
+    return countInElements(document.elements);
+  }
+  /**
+   * Get transformation description
+   */
+  getTransformationDescription(type, params) {
+    switch (type) {
+      case "scale":
+        return `Scale by ${params.scale?.x}x${params.scale?.y}`;
+      case "rotate":
+        return `Rotate by ${params.rotate?.angle}\xB0`;
+      case "translate":
+        return `Translate by (${params.translate?.x}, ${params.translate?.y})`;
+      case "flipHorizontal":
+        return "Flip horizontally";
+      case "flipVertical":
+        return "Flip vertically";
+      default:
+        return `Apply ${type} transformation`;
+    }
+  }
+};
+
 // src/core/SvgDocumentProcessor.ts
 var SvgDocumentProcessor = class {
   renderer;
@@ -5542,7 +6257,7 @@ var SvgDocumentProcessor = class {
     const errors = [];
     const warnings = [];
     try {
-      const document = {
+      let document = {
         viewBox: spec.viewBox,
         elements: spec.elements,
         ...spec.width !== void 0 && { width: spec.width },
@@ -5550,6 +6265,21 @@ var SvgDocumentProcessor = class {
         ...spec.title && { title: spec.title },
         ...spec.description && { description: spec.description }
       };
+      let optimizationResult;
+      let transformationResult;
+      if (spec.transform && spec.transform.length > 0) {
+        const transformationEngine = new SvgTransformationEngine();
+        transformationResult = await transformationEngine.transformMultiple(document, spec.transform);
+        document = transformationResult.transformedDocument;
+        warnings.push(...transformationResult.appliedTransforms.map((t) => t.description));
+      }
+      if (spec.optimize) {
+        const optimizationOptions = typeof spec.optimize === "boolean" ? OptimizationPresets.BALANCED : spec.optimize;
+        const optimizer = new SvgDocumentOptimizer(optimizationOptions);
+        optimizationResult = await optimizer.optimize(document);
+        document = optimizationResult.optimizedDocument;
+        warnings.push(...optimizationResult.warnings);
+      }
       if (spec.validate !== false) {
         const validationPreset = typeof spec.validate === "string" ? spec.validate : "standard";
         const validation = await this.validateDocument(document, validationPreset);
@@ -5571,11 +6301,25 @@ var SvgDocumentProcessor = class {
             hasTitle: !!document.title,
             hasDescription: !!document.description
           },
-          compliance: "svg20"
+          compliance: "svg20",
+          performance: {
+            elementCount: document.elements.length,
+            estimatedFileSize: svg.length,
+            renderComplexity: document.elements.length < 50 ? "low" : document.elements.length < 200 ? "medium" : "high"
+          }
         };
       }
       const processingTime = Date.now() - startTime;
-      return { document, svg, warnings, errors, metadata, processingTime };
+      return {
+        document,
+        svg,
+        warnings,
+        errors,
+        metadata,
+        processingTime,
+        ...optimizationResult && { optimization: optimizationResult },
+        ...transformationResult && { transformation: transformationResult }
+      };
     } catch (error) {
       logger.error("Document processing failed", { error, spec });
       throw error;
@@ -5607,6 +6351,32 @@ var SvgDocumentProcessor = class {
       };
     }
   }
+  /**
+   * Optimize an SVG document
+   */
+  async optimizeDocument(document, options) {
+    logger.info("Optimizing SVG document", { elementCount: document.elements.length });
+    const optimizer = new SvgDocumentOptimizer(options || OptimizationPresets.BALANCED);
+    return await optimizer.optimize(document);
+  }
+  /**
+   * Transform an SVG document
+   */
+  async transformDocument(document, transformation, params) {
+    logger.info("Transforming SVG document", { transformation, params });
+    const transformationEngine = new SvgTransformationEngine();
+    return await transformationEngine.transform(document, transformation, params);
+  }
+  /**
+   * Apply multiple transformations to an SVG document
+   */
+  async transformDocumentMultiple(document, transformations) {
+    logger.info("Applying multiple transformations to SVG document", {
+      count: transformations.length
+    });
+    const transformationEngine = new SvgTransformationEngine();
+    return await transformationEngine.transformMultiple(document, transformations);
+  }
   async generateMetadata(document) {
     try {
       const validationResult = await ValidationFactory.validateDocument(document, {
@@ -5623,7 +6393,12 @@ var SvgDocumentProcessor = class {
           hasTitle: accessibility?.hasTitle || !!document.title,
           hasDescription: accessibility?.hasDescription || !!document.description
         },
-        compliance: validationResult.documentResult?.compliance.compliant ? "svg20" : "non-compliant"
+        compliance: validationResult.documentResult?.compliance.compliant ? "svg20" : "non-compliant",
+        performance: {
+          elementCount: document.elements.length,
+          estimatedFileSize: JSON.stringify(document).length,
+          renderComplexity: document.elements.length < 50 ? "low" : document.elements.length < 200 ? "medium" : "high"
+        }
       };
     } catch (error) {
       logger.warn("Failed to generate enhanced metadata, using basic metadata", { error });
@@ -5634,7 +6409,12 @@ var SvgDocumentProcessor = class {
           hasTitle: !!document.title,
           hasDescription: !!document.description
         },
-        compliance: "svg20"
+        compliance: "svg20",
+        performance: {
+          elementCount: document.elements.length,
+          estimatedFileSize: JSON.stringify(document).length,
+          renderComplexity: document.elements.length < 50 ? "low" : document.elements.length < 200 ? "medium" : "high"
+        }
       };
     }
   }
@@ -6405,10 +7185,1449 @@ var ShapeCollections = class {
   }
 };
 
+// src/core/templates/SvgTemplateEngine.ts
+var SvgTemplateEngine = class {
+  templates = /* @__PURE__ */ new Map();
+  libraries = /* @__PURE__ */ new Map();
+  instances = /* @__PURE__ */ new Map();
+  /**
+   * Register a template in the engine
+   */
+  registerTemplate(template) {
+    logger.info("Registering SVG template", {
+      id: template.id,
+      name: template.name,
+      variableCount: template.variables.length
+    });
+    if (this.templates.has(template.id)) {
+      throw new Error(`Template ${template.id} already exists`);
+    }
+    this.validateTemplate(template);
+    this.templates.set(template.id, { ...template });
+    template.metadata.updatedAt = /* @__PURE__ */ new Date();
+    logger.info("SVG template registered successfully", { id: template.id });
+  }
+  /**
+   * Create instance from template with variable substitution
+   */
+  async instantiateTemplate(templateId, variables, instanceId) {
+    const startTime = Date.now();
+    logger.info("Instantiating SVG template", { templateId, variableCount: Object.keys(variables).length });
+    const template = this.templates.get(templateId);
+    if (!template) {
+      throw new Error(`Template not found: ${templateId}`);
+    }
+    const finalVariables = this.applyDefaultValues(template, variables);
+    this.validateVariables(template, finalVariables);
+    const finalInstanceId = instanceId || this.generateInstanceId(templateId);
+    try {
+      const document = await this.processTemplate(template, finalVariables);
+      const instance = {
+        templateId,
+        instanceId: finalInstanceId,
+        variables: { ...finalVariables },
+        document,
+        metadata: {
+          createdAt: /* @__PURE__ */ new Date(),
+          renderTime: Date.now() - startTime,
+          variableCount: Object.keys(finalVariables).length,
+          elementCount: this.countElements(document)
+        }
+      };
+      this.instances.set(finalInstanceId, instance);
+      this.updateTemplateUsage(templateId, finalVariables);
+      logger.info("SVG template instantiated successfully", {
+        templateId,
+        instanceId: finalInstanceId,
+        renderTime: instance.metadata.renderTime
+      });
+      return instance;
+    } catch (error) {
+      logger.error("SVG template instantiation failed", { error, templateId, variables });
+      throw error;
+    }
+  }
+  /**
+   * Create a template library
+   */
+  createLibrary(id, name, description, templates = []) {
+    logger.info("Creating SVG template library", { id, name, templateCount: templates.length });
+    const library = {
+      id,
+      name,
+      description: description || "",
+      version: "1.0.0",
+      templates: [...templates],
+      categories: this.generateCategories(templates),
+      metadata: {
+        totalTemplates: templates.length,
+        totalCategories: 0,
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date()
+      }
+    };
+    library.metadata.totalCategories = library.categories.length;
+    this.libraries.set(id, library);
+    templates.forEach((template) => {
+      template.metadata.library = id;
+    });
+    logger.info("SVG template library created", {
+      id,
+      templateCount: library.templates.length,
+      categoryCount: library.categories.length
+    });
+    return library;
+  }
+  /**
+   * Get template by ID
+   */
+  getTemplate(templateId) {
+    return this.templates.get(templateId);
+  }
+  /**
+   * Get all templates
+   */
+  getAllTemplates() {
+    return Array.from(this.templates.values());
+  }
+  /**
+   * Search templates by criteria
+   */
+  searchTemplates(criteria) {
+    const templates = Array.from(this.templates.values());
+    return templates.filter((template) => {
+      if (criteria.name && !template.name.toLowerCase().includes(criteria.name.toLowerCase())) {
+        return false;
+      }
+      if (criteria.category && template.metadata.category !== criteria.category) {
+        return false;
+      }
+      if (criteria.tags && criteria.tags.length > 0) {
+        const templateTags = template.tags.map((tag) => tag.toLowerCase());
+        const searchTags = criteria.tags.map((tag) => tag.toLowerCase());
+        const hasMatchingTag = searchTags.some(
+          (searchTag) => templateTags.some(
+            (templateTag) => templateTag.includes(searchTag)
+          )
+        );
+        if (!hasMatchingTag) {
+          return false;
+        }
+      }
+      if (criteria.author && template.author !== criteria.author) {
+        return false;
+      }
+      if (criteria.complexity && template.metadata.complexity !== criteria.complexity) {
+        return false;
+      }
+      if (criteria.dimensions) {
+        if (criteria.dimensions.width && template.metadata.dimensions.width !== criteria.dimensions.width) {
+          return false;
+        }
+        if (criteria.dimensions.height && template.metadata.dimensions.height !== criteria.dimensions.height) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }
+  /**
+   * Get template instance by ID
+   */
+  getInstance(instanceId) {
+    return this.instances.get(instanceId);
+  }
+  /**
+   * Get all instances
+   */
+  getAllInstances() {
+    return Array.from(this.instances.values());
+  }
+  /**
+   * Get library by ID
+   */
+  getLibrary(libraryId) {
+    return this.libraries.get(libraryId);
+  }
+  /**
+   * Apply default values for template variables
+   */
+  applyDefaultValues(template, variables) {
+    const result = { ...variables };
+    for (const templateVar of template.variables) {
+      if (result[templateVar.name] === void 0 && templateVar.defaultValue !== void 0) {
+        result[templateVar.name] = templateVar.defaultValue;
+      }
+    }
+    return result;
+  }
+  /**
+   * Validate template structure and content
+   */
+  validateTemplate(template) {
+    if (!template.id || typeof template.id !== "string") {
+      throw new Error("Template must have a valid ID");
+    }
+    if (!template.name || typeof template.name !== "string") {
+      throw new Error("Template must have a valid name");
+    }
+    if (!template.document || !template.document.viewBox) {
+      throw new Error("Template must have a valid SVG document with viewBox");
+    }
+    template.variables.forEach((variable) => {
+      if (!variable.name || typeof variable.name !== "string") {
+        throw new Error("Template variable must have a valid name");
+      }
+      if (!variable.type || !["string", "number", "boolean", "color", "point", "size", "array", "object"].includes(variable.type)) {
+        throw new Error(`Template variable ${variable.name} has invalid type: ${variable.type}`);
+      }
+    });
+  }
+  /**
+   * Validate variables against template requirements
+   */
+  validateVariables(template, variables) {
+    for (const templateVar of template.variables) {
+      const value = variables[templateVar.name];
+      if (templateVar.required && (value === void 0 || value === null)) {
+        throw new Error(`Required variable missing: ${templateVar.name}`);
+      }
+      if (value !== void 0 && value !== null) {
+        if (!this.validateVariableType(value, templateVar.type)) {
+          throw new Error(`Variable ${templateVar.name} has invalid type. Expected: ${templateVar.type}`);
+        }
+        if (templateVar.constraints) {
+          this.validateVariableConstraints(value, templateVar.constraints, templateVar.name);
+        }
+      }
+    }
+  }
+  /**
+   * Validate a variable value against its constraints (public method for tests)
+   */
+  validateVariable(variable, value) {
+    try {
+      if (!this.validateVariableType(value, variable.type)) {
+        return false;
+      }
+      if (variable.constraints) {
+        this.validateVariableConstraints(value, variable.constraints, variable.name);
+      }
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+  /**
+   * Validate variable type
+   */
+  validateVariableType(value, type) {
+    switch (type) {
+      case "string":
+        return typeof value === "string";
+      case "number":
+        return typeof value === "number" && !isNaN(value);
+      case "boolean":
+        return typeof value === "boolean";
+      case "color":
+        return typeof value === "string" && this.isValidColor(value);
+      case "point":
+        return typeof value === "object" && typeof value.x === "number" && typeof value.y === "number";
+      case "size":
+        return typeof value === "object" && typeof value.width === "number" && typeof value.height === "number";
+      case "array":
+        return Array.isArray(value);
+      case "object":
+        return typeof value === "object" && value !== null && !Array.isArray(value);
+      default:
+        return false;
+    }
+  }
+  /**
+   * Validate variable constraints
+   */
+  validateVariableConstraints(value, constraints, name) {
+    if (constraints.min !== void 0 && value < constraints.min) {
+      throw new Error(`Variable ${name} is below minimum value: ${constraints.min}`);
+    }
+    if (constraints.max !== void 0 && value > constraints.max) {
+      throw new Error(`Variable ${name} is above maximum value: ${constraints.max}`);
+    }
+    if (constraints.enumValues && !constraints.enumValues.includes(value)) {
+      throw new Error(`Variable ${name} must be one of: ${constraints.enumValues.join(", ")}`);
+    }
+    if (constraints.pattern && typeof value === "string") {
+      const regex = new RegExp(constraints.pattern);
+      if (!regex.test(value)) {
+        throw new Error(`Variable ${name} does not match pattern: ${constraints.pattern}`);
+      }
+    }
+    if (constraints.validation && !constraints.validation(value)) {
+      throw new Error(`Variable ${name} failed custom validation`);
+    }
+  }
+  /**
+   * Process template with variable substitution
+   */
+  async processTemplate(template, variables) {
+    const document = JSON.parse(JSON.stringify(template.document));
+    const finalVariables = { ...variables };
+    for (const templateVar of template.variables) {
+      if (finalVariables[templateVar.name] === void 0) {
+        finalVariables[templateVar.name] = templateVar.defaultValue;
+      }
+    }
+    this.applyVariableSubstitution(document, finalVariables);
+    return document;
+  }
+  /**
+   * Apply variable substitution to the document
+   */
+  applyVariableSubstitution(document, variables) {
+    const substituteValue = (value) => {
+      if (typeof value === "string") {
+        return value.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
+          return variables[varName] !== void 0 ? variables[varName] : match;
+        });
+      } else if (Array.isArray(value)) {
+        return value.map(substituteValue);
+      } else if (value && typeof value === "object") {
+        const result = {};
+        for (const [key, val] of Object.entries(value)) {
+          result[key] = substituteValue(val);
+        }
+        return result;
+      }
+      return value;
+    };
+    document.elements = document.elements.map((element) => substituteValue(element));
+  }
+  /**
+   * Generate categories from templates
+   */
+  generateCategories(templates) {
+    const categoryMap = /* @__PURE__ */ new Map();
+    templates.forEach((template) => {
+      const categoryName = template.metadata.category;
+      if (!categoryMap.has(categoryName)) {
+        categoryMap.set(categoryName, {
+          id: categoryName.toLowerCase().replace(/\s+/g, "-"),
+          name: categoryName,
+          description: `Templates in the ${categoryName} category`,
+          templateIds: []
+        });
+      }
+      const category = categoryMap.get(categoryName);
+      category.templateIds.push(template.id);
+    });
+    return Array.from(categoryMap.values());
+  }
+  /**
+   * Generate unique instance ID
+   */
+  generateInstanceId(templateId) {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
+    return `${templateId}-${timestamp}-${random}`;
+  }
+  /**
+   * Update template usage statistics
+   */
+  updateTemplateUsage(templateId, variables) {
+    const template = this.templates.get(templateId);
+    if (template) {
+      template.metadata.usage.totalUses++;
+      template.metadata.usage.lastUsed = /* @__PURE__ */ new Date();
+      const variationKey = JSON.stringify(variables);
+      template.metadata.usage.popularVariations[variationKey] = (template.metadata.usage.popularVariations[variationKey] || 0) + 1;
+    }
+  }
+  /**
+   * Count elements in document
+   */
+  countElements(document) {
+    const countInElements = (elements) => {
+      return elements.reduce((count, element) => {
+        let elementCount = 1;
+        if ("children" in element && element.children) {
+          elementCount += countInElements(element.children);
+        }
+        return count + elementCount;
+      }, 0);
+    };
+    return countInElements(document.elements);
+  }
+  /**
+   * Validate color value
+   */
+  isValidColor(color) {
+    const hexPattern = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    const rgbPattern = /^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/;
+    const rgbaPattern = /^rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)$/;
+    const namedColors = ["red", "green", "blue", "yellow", "black", "white", "orange", "purple", "pink", "gray", "grey", "brown"];
+    return hexPattern.test(color) || rgbPattern.test(color) || rgbaPattern.test(color) || namedColors.includes(color.toLowerCase());
+  }
+};
+
+// src/core/templates/SvgTemplateFactory.ts
+var SvgTemplateFactory = class {
+  templateEngine;
+  constructor(templateEngine) {
+    this.templateEngine = templateEngine;
+  }
+  /**
+   * Initialize factory with built-in templates
+   */
+  initialize() {
+    logger.info("Initializing SVG Template Factory with built-in templates");
+    this.registerIconTemplates();
+    this.registerChartTemplates();
+    this.registerPatternTemplates();
+    this.registerLogoTemplates();
+    this.registerDecorationTemplates();
+    logger.info("SVG Template Factory initialized successfully");
+  }
+  // ===== ICON TEMPLATES =====
+  /**
+   * Register icon templates
+   */
+  registerIconTemplates() {
+    this.templateEngine.registerTemplate(this.createArrowIconTemplate());
+    this.templateEngine.registerTemplate(this.createCheckIconTemplate());
+    this.templateEngine.registerTemplate(this.createStarIconTemplate());
+    this.templateEngine.registerTemplate(this.createHeartIconTemplate());
+  }
+  createArrowIconTemplate() {
+    return {
+      id: "icon-arrow",
+      name: "Arrow Icon",
+      description: "Customizable arrow icon with direction and styling options",
+      version: "1.0.0",
+      author: "SVG Template Factory",
+      tags: ["icon", "arrow", "navigation", "ui"],
+      variables: [
+        {
+          name: "direction",
+          type: "string",
+          defaultValue: "right",
+          description: "Arrow direction",
+          required: false,
+          constraints: {
+            enumValues: ["up", "down", "left", "right"]
+          }
+        },
+        {
+          name: "size",
+          type: "number",
+          defaultValue: 24,
+          description: "Icon size in pixels",
+          required: false,
+          constraints: { min: 8, max: 128 }
+        },
+        {
+          name: "color",
+          type: "color",
+          defaultValue: "#000000",
+          description: "Arrow color",
+          required: false
+        },
+        {
+          name: "strokeWidth",
+          type: "number",
+          defaultValue: 2,
+          description: "Stroke width",
+          required: false,
+          constraints: { min: 1, max: 8 }
+        }
+      ],
+      document: {
+        viewBox: { x: 0, y: 0, width: 24, height: 24 },
+        elements: [
+          {
+            type: "path",
+            d: "M9 18l6-6-6-6",
+            style: {
+              fill: "none",
+              stroke: "{{color}}",
+              strokeWidth: 2,
+              strokeLinecap: "round",
+              strokeLinejoin: "round"
+            }
+          }
+        ]
+      },
+      metadata: {
+        category: "Icons",
+        complexity: "simple",
+        dimensions: { width: 24, height: 24 },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date(),
+        usage: {
+          totalUses: 0,
+          popularVariations: {}
+        }
+      }
+    };
+  }
+  createCheckIconTemplate() {
+    return {
+      id: "icon-check",
+      name: "Check Mark Icon",
+      description: "Customizable check mark icon for success states",
+      version: "1.0.0",
+      author: "SVG Template Factory",
+      tags: ["icon", "check", "success", "validation", "ui"],
+      variables: [
+        {
+          name: "size",
+          type: "number",
+          defaultValue: 24,
+          description: "Icon size in pixels",
+          required: false,
+          constraints: { min: 8, max: 128 }
+        },
+        {
+          name: "color",
+          type: "color",
+          defaultValue: "#10B981",
+          description: "Check mark color",
+          required: false
+        },
+        {
+          name: "strokeWidth",
+          type: "number",
+          defaultValue: 3,
+          description: "Stroke width",
+          required: false,
+          constraints: { min: 1, max: 8 }
+        }
+      ],
+      document: {
+        viewBox: { x: 0, y: 0, width: 24, height: 24 },
+        elements: [
+          {
+            type: "path",
+            d: "M20 6L9 17l-5-5",
+            style: {
+              fill: "none",
+              stroke: "{{color}}",
+              strokeWidth: 3,
+              strokeLinecap: "round",
+              strokeLinejoin: "round"
+            }
+          }
+        ]
+      },
+      metadata: {
+        category: "Icons",
+        complexity: "simple",
+        dimensions: { width: 24, height: 24 },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date(),
+        usage: {
+          totalUses: 0,
+          popularVariations: {}
+        }
+      }
+    };
+  }
+  createStarIconTemplate() {
+    return {
+      id: "icon-star",
+      name: "Star Icon",
+      description: "Customizable star icon with fill and outline options",
+      version: "1.0.0",
+      author: "SVG Template Factory",
+      tags: ["icon", "star", "rating", "favorite", "ui"],
+      variables: [
+        {
+          name: "size",
+          type: "number",
+          defaultValue: 24,
+          description: "Icon size in pixels",
+          required: false,
+          constraints: { min: 8, max: 128 }
+        },
+        {
+          name: "fillColor",
+          type: "color",
+          defaultValue: "#FCD34D",
+          description: "Star fill color",
+          required: false
+        },
+        {
+          name: "strokeColor",
+          type: "color",
+          defaultValue: "#F59E0B",
+          description: "Star stroke color",
+          required: false
+        },
+        {
+          name: "filled",
+          type: "boolean",
+          defaultValue: true,
+          description: "Whether the star is filled",
+          required: false
+        }
+      ],
+      document: {
+        viewBox: { x: 0, y: 0, width: 24, height: 24 },
+        elements: [
+          {
+            type: "path",
+            d: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z",
+            style: {
+              fill: "{{fillColor}}",
+              stroke: "{{strokeColor}}",
+              strokeWidth: 1,
+              strokeLinecap: "round",
+              strokeLinejoin: "round"
+            }
+          }
+        ]
+      },
+      metadata: {
+        category: "Icons",
+        complexity: "simple",
+        dimensions: { width: 24, height: 24 },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date(),
+        usage: {
+          totalUses: 0,
+          popularVariations: {}
+        }
+      }
+    };
+  }
+  createHeartIconTemplate() {
+    return {
+      id: "icon-heart",
+      name: "Heart Icon",
+      description: "Customizable heart icon for favorites and likes",
+      version: "1.0.0",
+      author: "SVG Template Factory",
+      tags: ["icon", "heart", "favorite", "love", "ui"],
+      variables: [
+        {
+          name: "size",
+          type: "number",
+          defaultValue: 24,
+          description: "Icon size in pixels",
+          required: false,
+          constraints: { min: 8, max: 128 }
+        },
+        {
+          name: "color",
+          type: "color",
+          defaultValue: "#EF4444",
+          description: "Heart color",
+          required: false
+        },
+        {
+          name: "filled",
+          type: "boolean",
+          defaultValue: false,
+          description: "Whether the heart is filled",
+          required: false
+        }
+      ],
+      document: {
+        viewBox: { x: 0, y: 0, width: 24, height: 24 },
+        elements: [
+          {
+            type: "path",
+            d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z",
+            style: {
+              fill: "{{color}}",
+              stroke: "{{color}}",
+              strokeWidth: 2,
+              strokeLinecap: "round",
+              strokeLinejoin: "round"
+            }
+          }
+        ]
+      },
+      metadata: {
+        category: "Icons",
+        complexity: "simple",
+        dimensions: { width: 24, height: 24 },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date(),
+        usage: {
+          totalUses: 0,
+          popularVariations: {}
+        }
+      }
+    };
+  }
+  // ===== CHART TEMPLATES =====
+  /**
+   * Register chart templates
+   */
+  registerChartTemplates() {
+    this.templateEngine.registerTemplate(this.createBarChartTemplate());
+    this.templateEngine.registerTemplate(this.createPieChartTemplate());
+    this.templateEngine.registerTemplate(this.createLineChartTemplate());
+  }
+  createBarChartTemplate() {
+    return {
+      id: "chart-bar",
+      name: "Bar Chart",
+      description: "Simple bar chart with customizable data and styling",
+      version: "1.0.0",
+      author: "SVG Template Factory",
+      tags: ["chart", "bar", "data", "visualization"],
+      variables: [
+        {
+          name: "data",
+          type: "array",
+          defaultValue: [40, 70, 55, 90, 60],
+          description: "Chart data values",
+          required: true
+        },
+        {
+          name: "labels",
+          type: "array",
+          defaultValue: ["A", "B", "C", "D", "E"],
+          description: "Chart labels",
+          required: false
+        },
+        {
+          name: "barColor",
+          type: "color",
+          defaultValue: "#3B82F6",
+          description: "Bar color",
+          required: false
+        },
+        {
+          name: "maxValue",
+          type: "number",
+          defaultValue: 100,
+          description: "Maximum value for scaling",
+          required: false,
+          constraints: { min: 1 }
+        }
+      ],
+      document: {
+        viewBox: { x: 0, y: 0, width: 400, height: 300 },
+        elements: []
+        // Would be dynamically generated based on data
+      },
+      metadata: {
+        category: "Charts",
+        complexity: "intermediate",
+        dimensions: { width: 400, height: 300 },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date(),
+        usage: {
+          totalUses: 0,
+          popularVariations: {}
+        }
+      }
+    };
+  }
+  createPieChartTemplate() {
+    return {
+      id: "chart-pie",
+      name: "Pie Chart",
+      description: "Pie chart with customizable segments and colors",
+      version: "1.0.0",
+      author: "SVG Template Factory",
+      tags: ["chart", "pie", "data", "visualization"],
+      variables: [
+        {
+          name: "data",
+          type: "array",
+          defaultValue: [30, 25, 20, 15, 10],
+          description: "Chart data values",
+          required: true
+        },
+        {
+          name: "labels",
+          type: "array",
+          defaultValue: ["Segment 1", "Segment 2", "Segment 3", "Segment 4", "Segment 5"],
+          description: "Segment labels",
+          required: false
+        },
+        {
+          name: "colors",
+          type: "array",
+          defaultValue: ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"],
+          description: "Segment colors",
+          required: false
+        },
+        {
+          name: "centerX",
+          type: "number",
+          defaultValue: 150,
+          description: "Center X coordinate",
+          required: false
+        },
+        {
+          name: "centerY",
+          type: "number",
+          defaultValue: 150,
+          description: "Center Y coordinate",
+          required: false
+        },
+        {
+          name: "radius",
+          type: "number",
+          defaultValue: 100,
+          description: "Pie chart radius",
+          required: false,
+          constraints: { min: 20, max: 200 }
+        }
+      ],
+      document: {
+        viewBox: { x: 0, y: 0, width: 300, height: 300 },
+        elements: []
+        // Would be dynamically generated based on data
+      },
+      metadata: {
+        category: "Charts",
+        complexity: "advanced",
+        dimensions: { width: 300, height: 300 },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date(),
+        usage: {
+          totalUses: 0,
+          popularVariations: {}
+        }
+      }
+    };
+  }
+  createLineChartTemplate() {
+    return {
+      id: "chart-line",
+      name: "Line Chart",
+      description: "Line chart with customizable data points and styling",
+      version: "1.0.0",
+      author: "SVG Template Factory",
+      tags: ["chart", "line", "data", "visualization", "trends"],
+      variables: [
+        {
+          name: "data",
+          type: "array",
+          defaultValue: [
+            { x: 0, y: 40 },
+            { x: 1, y: 70 },
+            { x: 2, y: 55 },
+            { x: 3, y: 90 },
+            { x: 4, y: 60 }
+          ],
+          description: "Chart data points",
+          required: true
+        },
+        {
+          name: "lineColor",
+          type: "color",
+          defaultValue: "#3B82F6",
+          description: "Line color",
+          required: false
+        },
+        {
+          name: "pointColor",
+          type: "color",
+          defaultValue: "#1D4ED8",
+          description: "Data point color",
+          required: false
+        },
+        {
+          name: "strokeWidth",
+          type: "number",
+          defaultValue: 2,
+          description: "Line stroke width",
+          required: false,
+          constraints: { min: 1, max: 8 }
+        },
+        {
+          name: "showPoints",
+          type: "boolean",
+          defaultValue: true,
+          description: "Whether to show data points",
+          required: false
+        }
+      ],
+      document: {
+        viewBox: { x: 0, y: 0, width: 400, height: 300 },
+        elements: []
+        // Would be dynamically generated based on data
+      },
+      metadata: {
+        category: "Charts",
+        complexity: "intermediate",
+        dimensions: { width: 400, height: 300 },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date(),
+        usage: {
+          totalUses: 0,
+          popularVariations: {}
+        }
+      }
+    };
+  }
+  // ===== PATTERN TEMPLATES =====
+  /**
+   * Register pattern templates
+   */
+  registerPatternTemplates() {
+    this.templateEngine.registerTemplate(this.createGridPatternTemplate());
+    this.templateEngine.registerTemplate(this.createDotsPatternTemplate());
+    this.templateEngine.registerTemplate(this.createStripesPatternTemplate());
+  }
+  createGridPatternTemplate() {
+    return {
+      id: "pattern-grid",
+      name: "Grid Pattern",
+      description: "Customizable grid pattern for backgrounds",
+      version: "1.0.0",
+      author: "SVG Template Factory",
+      tags: ["pattern", "grid", "background", "decoration"],
+      variables: [
+        {
+          name: "gridSize",
+          type: "number",
+          defaultValue: 20,
+          description: "Grid cell size",
+          required: false,
+          constraints: { min: 5, max: 100 }
+        },
+        {
+          name: "strokeColor",
+          type: "color",
+          defaultValue: "#E5E7EB",
+          description: "Grid line color",
+          required: false
+        },
+        {
+          name: "strokeWidth",
+          type: "number",
+          defaultValue: 1,
+          description: "Grid line width",
+          required: false,
+          constraints: { min: 0.5, max: 5 }
+        },
+        {
+          name: "width",
+          type: "number",
+          defaultValue: 400,
+          description: "Pattern width",
+          required: false,
+          constraints: { min: 100, max: 1e3 }
+        },
+        {
+          name: "height",
+          type: "number",
+          defaultValue: 300,
+          description: "Pattern height",
+          required: false,
+          constraints: { min: 100, max: 1e3 }
+        }
+      ],
+      document: {
+        viewBox: { x: 0, y: 0, width: 400, height: 300 },
+        elements: []
+        // Would be dynamically generated based on gridSize
+      },
+      metadata: {
+        category: "Patterns",
+        complexity: "simple",
+        dimensions: { width: 400, height: 300 },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date(),
+        usage: {
+          totalUses: 0,
+          popularVariations: {}
+        }
+      }
+    };
+  }
+  createDotsPatternTemplate() {
+    return {
+      id: "pattern-dots",
+      name: "Dots Pattern",
+      description: "Customizable dots pattern for backgrounds",
+      version: "1.0.0",
+      author: "SVG Template Factory",
+      tags: ["pattern", "dots", "background", "decoration"],
+      variables: [
+        {
+          name: "dotSize",
+          type: "number",
+          defaultValue: 3,
+          description: "Dot radius",
+          required: false,
+          constraints: { min: 1, max: 20 }
+        },
+        {
+          name: "spacing",
+          type: "number",
+          defaultValue: 20,
+          description: "Spacing between dots",
+          required: false,
+          constraints: { min: 5, max: 100 }
+        },
+        {
+          name: "dotColor",
+          type: "color",
+          defaultValue: "#D1D5DB",
+          description: "Dot color",
+          required: false
+        },
+        {
+          name: "width",
+          type: "number",
+          defaultValue: 400,
+          description: "Pattern width",
+          required: false,
+          constraints: { min: 100, max: 1e3 }
+        },
+        {
+          name: "height",
+          type: "number",
+          defaultValue: 300,
+          description: "Pattern height",
+          required: false,
+          constraints: { min: 100, max: 1e3 }
+        }
+      ],
+      document: {
+        viewBox: { x: 0, y: 0, width: 400, height: 300 },
+        elements: []
+        // Would be dynamically generated based on spacing and dotSize
+      },
+      metadata: {
+        category: "Patterns",
+        complexity: "simple",
+        dimensions: { width: 400, height: 300 },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date(),
+        usage: {
+          totalUses: 0,
+          popularVariations: {}
+        }
+      }
+    };
+  }
+  createStripesPatternTemplate() {
+    return {
+      id: "pattern-stripes",
+      name: "Stripes Pattern",
+      description: "Customizable stripes pattern for backgrounds",
+      version: "1.0.0",
+      author: "SVG Template Factory",
+      tags: ["pattern", "stripes", "background", "decoration"],
+      variables: [
+        {
+          name: "stripeWidth",
+          type: "number",
+          defaultValue: 10,
+          description: "Stripe width",
+          required: false,
+          constraints: { min: 2, max: 50 }
+        },
+        {
+          name: "direction",
+          type: "string",
+          defaultValue: "horizontal",
+          description: "Stripe direction",
+          required: false,
+          constraints: {
+            enumValues: ["horizontal", "vertical", "diagonal"]
+          }
+        },
+        {
+          name: "color1",
+          type: "color",
+          defaultValue: "#F3F4F6",
+          description: "First stripe color",
+          required: false
+        },
+        {
+          name: "color2",
+          type: "color",
+          defaultValue: "#E5E7EB",
+          description: "Second stripe color",
+          required: false
+        },
+        {
+          name: "width",
+          type: "number",
+          defaultValue: 400,
+          description: "Pattern width",
+          required: false,
+          constraints: { min: 100, max: 1e3 }
+        },
+        {
+          name: "height",
+          type: "number",
+          defaultValue: 300,
+          description: "Pattern height",
+          required: false,
+          constraints: { min: 100, max: 1e3 }
+        }
+      ],
+      document: {
+        viewBox: { x: 0, y: 0, width: 400, height: 300 },
+        elements: []
+        // Would be dynamically generated based on stripeWidth and direction
+      },
+      metadata: {
+        category: "Patterns",
+        complexity: "simple",
+        dimensions: { width: 400, height: 300 },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date(),
+        usage: {
+          totalUses: 0,
+          popularVariations: {}
+        }
+      }
+    };
+  }
+  // ===== LOGO TEMPLATES =====
+  /**
+   * Register logo templates
+   */
+  registerLogoTemplates() {
+    this.templateEngine.registerTemplate(this.createSimpleLogoTemplate());
+    this.templateEngine.registerTemplate(this.createBadgeLogoTemplate());
+  }
+  createSimpleLogoTemplate() {
+    return {
+      id: "logo-simple",
+      name: "Simple Logo",
+      description: "Simple text-based logo with customizable styling",
+      version: "1.0.0",
+      author: "SVG Template Factory",
+      tags: ["logo", "text", "branding", "simple"],
+      variables: [
+        {
+          name: "text",
+          type: "string",
+          defaultValue: "LOGO",
+          description: "Logo text",
+          required: true
+        },
+        {
+          name: "fontSize",
+          type: "number",
+          defaultValue: 32,
+          description: "Font size",
+          required: false,
+          constraints: { min: 12, max: 72 }
+        },
+        {
+          name: "fontFamily",
+          type: "string",
+          defaultValue: "Arial, sans-serif",
+          description: "Font family",
+          required: false
+        },
+        {
+          name: "textColor",
+          type: "color",
+          defaultValue: "#1F2937",
+          description: "Text color",
+          required: false
+        },
+        {
+          name: "backgroundColor",
+          type: "color",
+          defaultValue: "transparent",
+          description: "Background color",
+          required: false
+        }
+      ],
+      document: {
+        viewBox: { x: 0, y: 0, width: 200, height: 60 },
+        elements: [
+          {
+            type: "text",
+            x: 100,
+            y: 40,
+            content: "{{text}}",
+            style: {
+              fontFamily: "{{fontFamily}}",
+              fontSize: 32,
+              fill: "{{textColor}}",
+              textAnchor: "middle",
+              dominantBaseline: "middle"
+            }
+          }
+        ]
+      },
+      metadata: {
+        category: "Logos",
+        complexity: "simple",
+        dimensions: { width: 200, height: 60 },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date(),
+        usage: {
+          totalUses: 0,
+          popularVariations: {}
+        }
+      }
+    };
+  }
+  createBadgeLogoTemplate() {
+    return {
+      id: "logo-badge",
+      name: "Badge Logo",
+      description: "Badge-style logo with background shape and text",
+      version: "1.0.0",
+      author: "SVG Template Factory",
+      tags: ["logo", "badge", "branding", "shape"],
+      variables: [
+        {
+          name: "text",
+          type: "string",
+          defaultValue: "BADGE",
+          description: "Badge text",
+          required: true
+        },
+        {
+          name: "shape",
+          type: "string",
+          defaultValue: "circle",
+          description: "Badge shape",
+          required: false,
+          constraints: {
+            enumValues: ["circle", "square", "hexagon"]
+          }
+        },
+        {
+          name: "backgroundColor",
+          type: "color",
+          defaultValue: "#3B82F6",
+          description: "Background color",
+          required: false
+        },
+        {
+          name: "textColor",
+          type: "color",
+          defaultValue: "#FFFFFF",
+          description: "Text color",
+          required: false
+        },
+        {
+          name: "size",
+          type: "number",
+          defaultValue: 100,
+          description: "Badge size",
+          required: false,
+          constraints: { min: 50, max: 200 }
+        }
+      ],
+      document: {
+        viewBox: { x: 0, y: 0, width: 100, height: 100 },
+        elements: [
+          {
+            type: "circle",
+            cx: 50,
+            cy: 50,
+            r: 45,
+            style: {
+              fill: "{{backgroundColor}}",
+              stroke: "none"
+            }
+          },
+          {
+            type: "text",
+            x: 50,
+            y: 50,
+            content: "{{text}}",
+            style: {
+              fontFamily: "Arial, sans-serif",
+              fontSize: 16,
+              fill: "{{textColor}}",
+              textAnchor: "middle",
+              dominantBaseline: "middle",
+              fontWeight: "bold"
+            }
+          }
+        ]
+      },
+      metadata: {
+        category: "Logos",
+        complexity: "simple",
+        dimensions: { width: 100, height: 100 },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date(),
+        usage: {
+          totalUses: 0,
+          popularVariations: {}
+        }
+      }
+    };
+  }
+  // ===== DECORATION TEMPLATES =====
+  /**
+   * Register decoration templates
+   */
+  registerDecorationTemplates() {
+    this.templateEngine.registerTemplate(this.createBorderDecorationTemplate());
+    this.templateEngine.registerTemplate(this.createDividerTemplate());
+  }
+  createBorderDecorationTemplate() {
+    return {
+      id: "decoration-border",
+      name: "Border Decoration",
+      description: "Decorative border with customizable style and corners",
+      version: "1.0.0",
+      author: "SVG Template Factory",
+      tags: ["decoration", "border", "frame", "ornament"],
+      variables: [
+        {
+          name: "width",
+          type: "number",
+          defaultValue: 300,
+          description: "Border width",
+          required: false,
+          constraints: { min: 100, max: 800 }
+        },
+        {
+          name: "height",
+          type: "number",
+          defaultValue: 200,
+          description: "Border height",
+          required: false,
+          constraints: { min: 100, max: 600 }
+        },
+        {
+          name: "strokeColor",
+          type: "color",
+          defaultValue: "#6B7280",
+          description: "Border color",
+          required: false
+        },
+        {
+          name: "strokeWidth",
+          type: "number",
+          defaultValue: 2,
+          description: "Border width",
+          required: false,
+          constraints: { min: 1, max: 10 }
+        },
+        {
+          name: "cornerRadius",
+          type: "number",
+          defaultValue: 10,
+          description: "Corner radius",
+          required: false,
+          constraints: { min: 0, max: 50 }
+        }
+      ],
+      document: {
+        viewBox: { x: 0, y: 0, width: 300, height: 200 },
+        elements: [
+          {
+            type: "rect",
+            x: 10,
+            y: 10,
+            width: 280,
+            height: 180,
+            rx: 10,
+            ry: 10,
+            style: {
+              fill: "none",
+              stroke: "{{strokeColor}}",
+              strokeWidth: 2
+            }
+          }
+        ]
+      },
+      metadata: {
+        category: "Decorations",
+        complexity: "simple",
+        dimensions: { width: 300, height: 200 },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date(),
+        usage: {
+          totalUses: 0,
+          popularVariations: {}
+        }
+      }
+    };
+  }
+  createDividerTemplate() {
+    return {
+      id: "decoration-divider",
+      name: "Divider",
+      description: "Decorative divider line with optional center ornament",
+      version: "1.0.0",
+      author: "SVG Template Factory",
+      tags: ["decoration", "divider", "separator", "line"],
+      variables: [
+        {
+          name: "width",
+          type: "number",
+          defaultValue: 200,
+          description: "Divider width",
+          required: false,
+          constraints: { min: 50, max: 500 }
+        },
+        {
+          name: "lineColor",
+          type: "color",
+          defaultValue: "#D1D5DB",
+          description: "Line color",
+          required: false
+        },
+        {
+          name: "strokeWidth",
+          type: "number",
+          defaultValue: 1,
+          description: "Line width",
+          required: false,
+          constraints: { min: 0.5, max: 5 }
+        },
+        {
+          name: "centerOrnament",
+          type: "boolean",
+          defaultValue: true,
+          description: "Whether to include center ornament",
+          required: false
+        }
+      ],
+      document: {
+        viewBox: { x: 0, y: 0, width: 200, height: 20 },
+        elements: [
+          {
+            type: "line",
+            x1: 0,
+            y1: 10,
+            x2: 200,
+            y2: 10,
+            style: {
+              stroke: "{{lineColor}}",
+              strokeWidth: 1
+            }
+          }
+        ]
+      },
+      metadata: {
+        category: "Decorations",
+        complexity: "simple",
+        dimensions: { width: 200, height: 20 },
+        createdAt: /* @__PURE__ */ new Date(),
+        updatedAt: /* @__PURE__ */ new Date(),
+        usage: {
+          totalUses: 0,
+          popularVariations: {}
+        }
+      }
+    };
+  }
+};
+
 // src/server/SvgMcpServer.ts
 var SvgMcpServer = class extends FastMCP {
   svgRenderer;
   documentProcessor;
+  templateEngine;
+  templateFactory;
   config;
   constructor(config) {
     super({
@@ -6423,6 +8642,9 @@ var SvgMcpServer = class extends FastMCP {
     };
     this.svgRenderer = new SvgRenderer();
     this.documentProcessor = new SvgDocumentProcessor();
+    this.templateEngine = new SvgTemplateEngine();
+    this.templateFactory = new SvgTemplateFactory(this.templateEngine);
+    this.templateFactory.initialize();
     if (this.config.enableDebug) {
       logger.setLogLevel("debug");
     }
@@ -6902,6 +9124,392 @@ var SvgMcpServer = class extends FastMCP {
           };
         } catch (error) {
           logger.error("SVG validation with auto-fix failed", { error, document });
+          throw error;
+        }
+      }
+    });
+    this.addTool({
+      name: "optimize_svg",
+      description: "Optimize an SVG document for better performance and smaller file size",
+      parameters: external_exports.object({
+        document: external_exports.object({
+          viewBox: external_exports.object({
+            x: external_exports.number(),
+            y: external_exports.number(),
+            width: external_exports.number(),
+            height: external_exports.number()
+          }),
+          elements: external_exports.array(external_exports.any()),
+          title: external_exports.string().optional(),
+          description: external_exports.string().optional()
+        }),
+        preset: external_exports.enum(["aggressive", "balanced", "conservative"]).default("balanced"),
+        options: external_exports.object({
+          removeRedundantAttributes: external_exports.boolean().optional(),
+          simplifyPaths: external_exports.boolean().optional(),
+          mergeGroups: external_exports.boolean().optional(),
+          removeEmptyElements: external_exports.boolean().optional(),
+          optimizeViewBox: external_exports.boolean().optional(),
+          roundCoordinates: external_exports.boolean().optional(),
+          coordinatePrecision: external_exports.number().optional(),
+          preserveAccessibility: external_exports.boolean().optional()
+        }).optional()
+      }),
+      execute: async (args) => {
+        const { document, preset = "balanced", options } = args;
+        try {
+          logger.info("Optimizing SVG document", { preset, elementCount: document.elements?.length });
+          const svgDocument = {
+            viewBox: document.viewBox,
+            elements: document.elements || [],
+            ...document.title && { title: document.title },
+            ...document.description && { description: document.description }
+          };
+          let optimizationOptions;
+          if (options) {
+            optimizationOptions = options;
+          } else {
+            switch (preset) {
+              case "aggressive":
+                optimizationOptions = OptimizationPresets.AGGRESSIVE;
+                break;
+              case "conservative":
+                optimizationOptions = OptimizationPresets.CONSERVATIVE;
+                break;
+              default:
+                optimizationOptions = OptimizationPresets.BALANCED;
+            }
+          }
+          const result = await this.documentProcessor.optimizeDocument(svgDocument, optimizationOptions);
+          const response = {
+            optimizedDocument: result.optimizedDocument,
+            statistics: result.statistics,
+            applied: result.applied,
+            warnings: result.warnings,
+            summary: {
+              originalElements: result.statistics.originalElementCount,
+              optimizedElements: result.statistics.optimizedElementCount,
+              elementReduction: result.statistics.elementReduction,
+              estimatedSizeReduction: `${result.statistics.estimatedSizeReduction}%`,
+              optimizationsApplied: result.applied.length
+            }
+          };
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify(response, null, 2)
+            }]
+          };
+        } catch (error) {
+          logger.error("SVG optimization failed", { error, document });
+          throw error;
+        }
+      }
+    });
+    this.addTool({
+      name: "transform_svg",
+      description: "Apply geometric transformations to an SVG document",
+      parameters: external_exports.object({
+        document: external_exports.object({
+          viewBox: external_exports.object({
+            x: external_exports.number(),
+            y: external_exports.number(),
+            width: external_exports.number(),
+            height: external_exports.number()
+          }),
+          elements: external_exports.array(external_exports.any()),
+          title: external_exports.string().optional(),
+          description: external_exports.string().optional()
+        }),
+        transformation: external_exports.enum(["scale", "rotate", "translate", "flipHorizontal", "flipVertical"]),
+        parameters: external_exports.object({
+          scale: external_exports.object({
+            x: external_exports.number(),
+            y: external_exports.number()
+          }).optional(),
+          rotate: external_exports.object({
+            angle: external_exports.number(),
+            centerX: external_exports.number().optional(),
+            centerY: external_exports.number().optional()
+          }).optional(),
+          translate: external_exports.object({
+            x: external_exports.number(),
+            y: external_exports.number()
+          }).optional()
+        })
+      }),
+      execute: async (args) => {
+        const { document, transformation, parameters } = args;
+        try {
+          logger.info("Transforming SVG document", { transformation, parameters });
+          const svgDocument = {
+            viewBox: document.viewBox,
+            elements: document.elements || [],
+            ...document.title && { title: document.title },
+            ...document.description && { description: document.description }
+          };
+          const result = await this.documentProcessor.transformDocument(
+            svgDocument,
+            transformation,
+            parameters
+          );
+          const response = {
+            transformedDocument: result.transformedDocument,
+            appliedTransforms: result.appliedTransforms,
+            metadata: result.metadata,
+            summary: {
+              transformation,
+              originalBounds: result.metadata.originalBounds,
+              transformedBounds: result.metadata.transformedBounds,
+              scaleFactors: result.metadata.scaleFactors
+            }
+          };
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify(response, null, 2)
+            }]
+          };
+        } catch (error) {
+          logger.error("SVG transformation failed", { error, transformation, parameters });
+          throw error;
+        }
+      }
+    });
+    this.addTool({
+      name: "list_templates",
+      description: "List available SVG templates with optional filtering",
+      parameters: external_exports.object({
+        query: external_exports.string().optional().describe("Search query for template names/descriptions"),
+        tags: external_exports.array(external_exports.string()).optional().describe("Filter by tags"),
+        category: external_exports.string().optional().describe("Filter by category"),
+        author: external_exports.string().optional().describe("Filter by author")
+      }),
+      execute: async (args) => {
+        const { query = "", tags = [], category, author } = args;
+        try {
+          logger.info("Listing templates", { query, tags, category, author });
+          const searchCriteria = {
+            name: query,
+            tags
+          };
+          if (category) {
+            searchCriteria.category = category;
+          }
+          const allTemplates = this.templateEngine.searchTemplates(searchCriteria);
+          let filteredTemplates = allTemplates;
+          if (author) {
+            filteredTemplates = allTemplates.filter(
+              (template) => template.author && template.author.toLowerCase().includes(author.toLowerCase())
+            );
+          }
+          return {
+            type: "text",
+            text: JSON.stringify({
+              templates: filteredTemplates.map((template) => ({
+                id: template.id,
+                name: template.name,
+                description: template.description,
+                version: template.version,
+                author: template.author,
+                tags: template.tags,
+                category: template.metadata.category,
+                complexity: template.metadata.complexity,
+                dimensions: template.metadata.dimensions,
+                variableCount: template.variables.length,
+                usageCount: template.metadata.usage.totalUses
+              })),
+              total: filteredTemplates.length
+            }, null, 2)
+          };
+        } catch (error) {
+          logger.error("Failed to list templates", { error });
+          throw error;
+        }
+      }
+    });
+    this.addTool({
+      name: "get_template",
+      description: "Get detailed information about a specific template including variables",
+      parameters: external_exports.object({
+        templateId: external_exports.string().describe("Template ID to retrieve")
+      }),
+      execute: async (args) => {
+        const { templateId } = args;
+        try {
+          logger.info("Getting template details", { templateId });
+          const template = this.templateEngine.getTemplate(templateId);
+          if (!template) {
+            throw new Error(`Template '${templateId}' not found`);
+          }
+          return {
+            type: "text",
+            text: JSON.stringify({
+              template: {
+                id: template.id,
+                name: template.name,
+                description: template.description,
+                version: template.version,
+                author: template.author,
+                tags: template.tags,
+                category: template.metadata.category,
+                complexity: template.metadata.complexity,
+                dimensions: template.metadata.dimensions,
+                variables: template.variables.map((variable) => ({
+                  name: variable.name,
+                  type: variable.type,
+                  defaultValue: variable.defaultValue,
+                  description: variable.description,
+                  required: variable.required,
+                  constraints: variable.constraints
+                })),
+                usage: template.metadata.usage,
+                createdAt: template.metadata.createdAt,
+                updatedAt: template.metadata.updatedAt
+              }
+            }, null, 2)
+          };
+        } catch (error) {
+          logger.error("Failed to get template details", { error, templateId });
+          throw error;
+        }
+      }
+    });
+    this.addTool({
+      name: "instantiate_template",
+      description: "Create an SVG instance from a template with custom variable values",
+      parameters: external_exports.object({
+        templateId: external_exports.string().describe("Template ID to instantiate"),
+        variables: external_exports.record(external_exports.any()).optional().describe("Variable values for template instantiation"),
+        renderSvg: external_exports.boolean().default(true).describe("Whether to render SVG string")
+      }),
+      execute: async (args) => {
+        const { templateId, variables = {}, renderSvg = true } = args;
+        try {
+          logger.info("Instantiating template", { templateId, variables, renderSvg });
+          const instance = await this.templateEngine.instantiateTemplate(templateId, variables);
+          let svgString;
+          if (renderSvg) {
+            svgString = await this.svgRenderer.render(instance.document);
+          }
+          return {
+            type: "text",
+            text: JSON.stringify({
+              instance: {
+                instanceId: instance.instanceId,
+                templateId: instance.templateId,
+                variables: instance.variables,
+                createdAt: instance.metadata.createdAt,
+                document: instance.document
+              },
+              svg: svgString
+            }, null, 2)
+          };
+        } catch (error) {
+          logger.error("Failed to instantiate template", { error, templateId, variables });
+          throw error;
+        }
+      }
+    });
+    this.addTool({
+      name: "search_templates",
+      description: "Search templates using advanced criteria and filters",
+      parameters: external_exports.object({
+        query: external_exports.string().optional().describe("Text search in name, description, and tags"),
+        tags: external_exports.array(external_exports.string()).optional().describe("Must match all specified tags"),
+        category: external_exports.string().optional().describe("Template category filter"),
+        complexity: external_exports.enum(["simple", "intermediate", "advanced"]).optional().describe("Complexity level"),
+        dimensions: external_exports.object({
+          minWidth: external_exports.number().optional(),
+          maxWidth: external_exports.number().optional(),
+          minHeight: external_exports.number().optional(),
+          maxHeight: external_exports.number().optional()
+        }).optional().describe("Dimension constraints"),
+        sortBy: external_exports.enum(["name", "usage", "created", "updated"]).optional().describe("Sort criteria"),
+        sortOrder: external_exports.enum(["asc", "desc"]).default("asc").describe("Sort order"),
+        limit: external_exports.number().min(1).max(100).default(20).describe("Maximum results to return")
+      }),
+      execute: async (args) => {
+        const {
+          query = "",
+          tags = [],
+          category,
+          complexity,
+          dimensions,
+          sortBy = "name",
+          sortOrder = "asc",
+          limit = 20
+        } = args;
+        try {
+          logger.info("Searching templates", {
+            query,
+            tags,
+            category,
+            complexity,
+            dimensions,
+            sortBy,
+            sortOrder,
+            limit
+          });
+          const searchCriteria = {
+            name: query,
+            tags
+          };
+          if (category) {
+            searchCriteria.category = category;
+          }
+          let results = this.templateEngine.searchTemplates(searchCriteria);
+          if (complexity) {
+            results = results.filter((template) => template.metadata.complexity === complexity);
+          }
+          if (dimensions) {
+            results = results.filter((template) => {
+              const templateDims = template.metadata.dimensions;
+              return (!dimensions.minWidth || templateDims.width >= dimensions.minWidth) && (!dimensions.maxWidth || templateDims.width <= dimensions.maxWidth) && (!dimensions.minHeight || templateDims.height >= dimensions.minHeight) && (!dimensions.maxHeight || templateDims.height <= dimensions.maxHeight);
+            });
+          }
+          results.sort((a, b) => {
+            let comparison = 0;
+            switch (sortBy) {
+              case "name":
+                comparison = a.name.localeCompare(b.name);
+                break;
+              case "usage":
+                comparison = a.metadata.usage.totalUses - b.metadata.usage.totalUses;
+                break;
+              case "created":
+                comparison = a.metadata.createdAt.getTime() - b.metadata.createdAt.getTime();
+                break;
+              case "updated":
+                comparison = a.metadata.updatedAt.getTime() - b.metadata.updatedAt.getTime();
+                break;
+            }
+            return sortOrder === "desc" ? -comparison : comparison;
+          });
+          const limitedResults = results.slice(0, limit);
+          return {
+            type: "text",
+            text: JSON.stringify({
+              results: limitedResults.map((template) => ({
+                id: template.id,
+                name: template.name,
+                description: template.description,
+                version: template.version,
+                author: template.author,
+                tags: template.tags,
+                category: template.metadata.category,
+                complexity: template.metadata.complexity,
+                dimensions: template.metadata.dimensions,
+                variableCount: template.variables.length,
+                usageCount: template.metadata.usage.totalUses
+              })),
+              total: limitedResults.length,
+              totalMatches: results.length,
+              hasMore: results.length > limit
+            }, null, 2)
+          };
+        } catch (error) {
+          logger.error("Failed to search templates", { error });
           throw error;
         }
       }

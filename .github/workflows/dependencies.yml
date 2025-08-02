@@ -1,0 +1,323 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  check-dependencies:
+    name: Check for Dependency Updates
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Check for outdated packages
+      id: outdated
+      run: |
+        # Check for outdated packages
+        OUTDATED=$(npm outdated --json || echo '{}')
+        echo "outdated-packages=$OUTDATED" >> $GITHUB_OUTPUT
+        
+        # Count outdated packages
+        OUTDATED_COUNT=$(echo "$OUTDATED" | jq 'length')
+        echo "outdated-count=$OUTDATED_COUNT" >> $GITHUB_OUTPUT
+        
+        echo "Found $OUTDATED_COUNT outdated packages"
+    
+    - name: Check for security vulnerabilities
+      id: audit
+      run: |
+        # Run security audit
+        npm audit --json > audit-results.json || true
+        
+        # Extract vulnerability counts
+        HIGH_VULNS=$(jq '.metadata.vulnerabilities.high // 0' audit-results.json)
+        CRITICAL_VULNS=$(jq '.metadata.vulnerabilities.critical // 0' audit-results.json)
+        
+        echo "high-vulnerabilities=$HIGH_VULNS" >> $GITHUB_OUTPUT
+        echo "critical-vulnerabilities=$CRITICAL_VULNS" >> $GITHUB_OUTPUT
+        
+        echo "Security audit: $CRITICAL_VULNS critical, $HIGH_VULNS high vulnerabilities"
+    
+    - name: Create dependency update issue
+      if: steps.outdated.outputs.outdated-count > 0 || steps.audit.outputs.critical-vulnerabilities > 0
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const outdatedCount = ${{ steps.outdated.outputs.outdated-count }};
+          const criticalVulns = ${{ steps.audit.outputs.critical-vulnerabilities }};
+          const highVulns = ${{ steps.audit.outputs.high-vulnerabilities }};
+          
+          const title = `Dependency Updates Available (${outdatedCount} outdated, ${criticalVulns} critical vulnerabilities)`;
+          
+          let body = `## Dependency Update Report\n\n`;
+          body += `**Generated:** ${new Date().toISOString()}\n\n`;
+          
+          if (outdatedCount > 0) {
+            body += `### 📦 Outdated Packages (${outdatedCount})\n\n`;
+            body += `Run \`npm outdated\` to see detailed information.\n\n`;
+          }
+          
+          if (criticalVulns > 0 || highVulns > 0) {
+            body += `### 🚨 Security Vulnerabilities\n\n`;
+            body += `- **Critical:** ${criticalVulns}\n`;
+            body += `- **High:** ${highVulns}\n\n`;
+            body += `Run \`npm audit\` for detailed vulnerability information.\n\n`;
+          }
+          
+          body += `### 🔧 Recommended Actions\n\n`;
+          body += `1. Review outdated packages: \`npm outdated\`\n`;
+          body += `2. Update packages: \`npm update\`\n`;
+          body += `3. Fix security issues: \`npm audit fix\`\n`;
+          body += `4. Test thoroughly after updates\n`;
+          body += `5. Update lock file: \`npm ci\`\n\n`;
+          
+          body += `### 🚀 Automation\n\n`;
+          body += `This issue was automatically created by the dependency update workflow.\n`;
+          body += `Close this issue after addressing the updates.\n`;
+          
+          // Check if issue already exists
+          const issues = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            labels: 'dependencies'
+          });
+          
+          const existingIssue = issues.data.find(issue => 
+            issue.title.includes('Dependency Updates Available')
+          );
+          
+          if (existingIssue) {
+            // Update existing issue
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: existingIssue.number,
+              title: title,
+              body: body
+            });
+            
+            console.log(`Updated existing issue #${existingIssue.number}`);
+          } else {
+            // Create new issue
+            const newIssue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['dependencies', 'maintenance']
+            });
+            
+            console.log(`Created new issue #${newIssue.data.number}`);
+          }
+
+  update-dependencies:
+    name: Auto-update Dependencies
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Update patch and minor versions
+      run: |
+        # Update patch versions (safe updates)
+        npm update --save --save-dev
+        
+        # Check if there are changes
+        if git diff --quiet package*.json; then
+          echo "No dependency updates available"
+          echo "has-updates=false" >> $GITHUB_ENV
+        else
+          echo "Dependencies updated"
+          echo "has-updates=true" >> $GITHUB_ENV
+        fi
+    
+    - name: Run tests after update
+      if: env.has-updates == 'true'
+      run: |
+        npm ci
+        npm run test:all
+    
+    - name: Create pull request
+      if: env.has-updates == 'true'
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: 'chore: update dependencies'
+        title: 'chore: automated dependency updates'
+        body: |
+          ## Automated Dependency Updates
+          
+          This PR contains automated dependency updates:
+          
+          - ✅ All tests passing
+          - 🔄 Patch and minor version updates only
+          - 🤖 Automatically generated
+          
+          ### Changes
+          
+          This PR updates dependencies to their latest patch/minor versions.
+          Review the changes and merge if everything looks good.
+          
+          ### Validation
+          
+          - [x] Dependencies updated successfully
+          - [x] All tests passing
+          - [x] Build successful
+          
+          **Note:** This PR was automatically created by the dependency update workflow.
+        branch: chore/dependency-updates
+        delete-branch: true
+        labels: |
+          dependencies
+          automated
+          maintenance
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run security audit
+      run: |
+        # Generate detailed audit report
+        npm audit --json > security-audit.json || true
+        npm audit --audit-level high
+    
+    - name: Upload security audit results
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-audit-report
+        path: security-audit.json
+        retention-days: 30
+    
+    - name: Create security issue for critical vulnerabilities
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read audit results
+          let auditData;
+          try {
+            auditData = JSON.parse(fs.readFileSync('security-audit.json', 'utf8'));
+          } catch (error) {
+            console.log('No security audit data available');
+            return;
+          }
+          
+          const metadata = auditData.metadata || {};
+          const vulnerabilities = metadata.vulnerabilities || {};
+          const criticalCount = vulnerabilities.critical || 0;
+          const highCount = vulnerabilities.high || 0;
+          
+          if (criticalCount === 0 && highCount === 0) {
+            console.log('No critical or high vulnerabilities found');
+            return;
+          }
+          
+          const title = `🚨 Security Alert: ${criticalCount} critical, ${highCount} high vulnerabilities`;
+          
+          let body = `## Security Vulnerability Report\n\n`;
+          body += `**Generated:** ${new Date().toISOString()}\n\n`;
+          body += `### 🚨 Vulnerability Summary\n\n`;
+          body += `- **Critical:** ${criticalCount}\n`;
+          body += `- **High:** ${highCount}\n`;
+          body += `- **Moderate:** ${vulnerabilities.moderate || 0}\n`;
+          body += `- **Low:** ${vulnerabilities.low || 0}\n\n`;
+          
+          if (auditData.advisories) {
+            body += `### 📋 Vulnerability Details\n\n`;
+            Object.values(auditData.advisories).forEach(advisory => {
+              if (advisory.severity === 'critical' || advisory.severity === 'high') {
+                body += `#### ${advisory.title}\n`;
+                body += `- **Severity:** ${advisory.severity}\n`;
+                body += `- **Package:** ${advisory.module_name}\n`;
+                body += `- **Patched versions:** ${advisory.patched_versions}\n`;
+                body += `- **More info:** ${advisory.url}\n\n`;
+              }
+            });
+          }
+          
+          body += `### 🔧 Immediate Actions Required\n\n`;
+          body += `1. Run \`npm audit fix\` to automatically fix vulnerabilities\n`;
+          body += `2. Review and update packages with critical vulnerabilities\n`;
+          body += `3. Test thoroughly after applying fixes\n`;
+          body += `4. Consider alternative packages if no fix is available\n\n`;
+          
+          body += `### 📊 Full Report\n\n`;
+          body += `Download the full security audit report from the workflow artifacts.\n`;
+          
+          // Check for existing security issue
+          const issues = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            labels: 'security'
+          });
+          
+          const existingIssue = issues.data.find(issue => 
+            issue.title.includes('Security Alert')
+          );
+          
+          if (existingIssue) {
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: existingIssue.number,
+              title: title,
+              body: body
+            });
+            console.log(`Updated security issue #${existingIssue.number}`);
+          } else {
+            const newIssue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['security', 'high-priority']
+            });
+            console.log(`Created security issue #${newIssue.data.number}`);
+          }

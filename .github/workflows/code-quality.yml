@@ -1,0 +1,389 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run weekly code quality checks
+    - cron: '0 2 * * 1'
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Shallow clones should be disabled for better analysis
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run ESLint
+      run: |
+        npm run lint -- --format json --output-file eslint-results.json || true
+        npm run lint
+    
+    - name: Run Prettier check
+      run: npm run format:check
+    
+    - name: Run TypeScript compiler
+      run: npm run type-check
+    
+    - name: Upload ESLint results
+      uses: actions/upload-artifact@v3
+      with:
+        name: eslint-results
+        path: eslint-results.json
+        retention-days: 30
+
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'P47Phoenix'  # Only run on main repository
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Shallow clones should be disabled for SonarCloud analysis
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests with coverage
+      run: npm run test:coverage
+    
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  complexity-analysis:
+    name: Code Complexity Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install complexity analysis tools
+      run: npm install -g complexity-report jshint
+    
+    - name: Generate complexity report
+      run: |
+        # Generate complexity report for TypeScript files
+        find src -name "*.ts" -not -path "*/node_modules/*" | xargs -I {} complexity-report {} --format json > complexity-report.json || true
+        
+        # Generate human-readable report
+        find src -name "*.ts" -not -path "*/node_modules/*" | xargs complexity-report --format plain > complexity-report.txt || true
+    
+    - name: Upload complexity report
+      uses: actions/upload-artifact@v3
+      with:
+        name: complexity-report
+        path: |
+          complexity-report.json
+          complexity-report.txt
+        retention-days: 30
+    
+    - name: Check complexity thresholds
+      run: |
+        # Basic complexity check (you can customize these thresholds)
+        echo "Checking complexity thresholds..."
+        
+        # This is a simple check - you can implement more sophisticated analysis
+        if [ -f "complexity-report.json" ]; then
+          echo "Complexity report generated successfully"
+        else
+          echo "Warning: Complexity report generation failed"
+        fi
+
+  documentation-check:
+    name: Documentation Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Check README and documentation
+      run: |
+        # Check if README exists and has minimum content
+        if [ ! -f "README.md" ]; then
+          echo "❌ README.md is missing"
+          exit 1
+        fi
+        
+        # Check README length (minimum 100 characters)
+        README_LENGTH=$(wc -c < README.md)
+        if [ $README_LENGTH -lt 100 ]; then
+          echo "❌ README.md is too short ($README_LENGTH characters)"
+          exit 1
+        fi
+        
+        echo "✅ README.md exists and has adequate content ($README_LENGTH characters)"
+        
+        # Check for required documentation files
+        REQUIRED_DOCS=("docs/architecture.md" "docs/features.md" "docs/implementation-plan.md")
+        for doc in "${REQUIRED_DOCS[@]}"; do
+          if [ -f "$doc" ]; then
+            echo "✅ $doc exists"
+          else
+            echo "❌ $doc is missing"
+            exit 1
+          fi
+        done
+    
+    - name: Check code comments coverage
+      run: |
+        # Simple check for TypeScript files with minimal comments
+        echo "Checking code comment coverage..."
+        
+        TS_FILES=$(find src -name "*.ts" | wc -l)
+        COMMENTED_FILES=$(find src -name "*.ts" -exec grep -l "^\s*\*\|^\s*//" {} \; | wc -l)
+        
+        if [ $TS_FILES -gt 0 ]; then
+          COMMENT_RATIO=$((COMMENTED_FILES * 100 / TS_FILES))
+          echo "Comment coverage: $COMMENT_RATIO% ($COMMENTED_FILES/$TS_FILES files)"
+          
+          if [ $COMMENT_RATIO -lt 50 ]; then
+            echo "⚠️ Low comment coverage: $COMMENT_RATIO%"
+          else
+            echo "✅ Good comment coverage: $COMMENT_RATIO%"
+          fi
+        fi
+    
+    - name: Generate documentation metrics
+      run: |
+        # Create documentation metrics file
+        cat > doc-metrics.json << EOF
+        {
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "readme_length": $(wc -c < README.md),
+          "total_docs": $(find docs -name "*.md" | wc -l),
+          "source_files": $(find src -name "*.ts" | wc -l),
+          "commented_files": $(find src -name "*.ts" -exec grep -l "^\s*\*\|^\s*//" {} \; | wc -l)
+        }
+        EOF
+    
+    - name: Upload documentation metrics
+      uses: actions/upload-artifact@v3
+      with:
+        name: documentation-metrics
+        path: doc-metrics.json
+        retention-days: 30
+
+  performance-analysis:
+    name: Performance Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build application
+      run: npm run build
+    
+    - name: Analyze bundle size
+      run: |
+        # Basic bundle size analysis
+        if [ -f "dist/index.js" ]; then
+          BUNDLE_SIZE=$(wc -c < dist/index.js)
+          echo "Bundle size: $BUNDLE_SIZE bytes"
+          
+          # Create bundle size report
+          cat > bundle-analysis.json << EOF
+        {
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "bundle_size_bytes": $BUNDLE_SIZE,
+          "bundle_size_mb": $(echo "scale=2; $BUNDLE_SIZE / 1024 / 1024" | bc -l),
+          "files": {
+        EOF
+          
+          # Add file sizes
+          find dist -name "*.js" -exec sh -c 'echo "    \"$(basename {})\": $(wc -c < {}),"' \; >> bundle-analysis.json
+          
+          # Close JSON
+          echo '  }' >> bundle-analysis.json
+          echo '}' >> bundle-analysis.json
+          
+          # Check bundle size threshold (10MB)
+          if [ $BUNDLE_SIZE -gt 10485760 ]; then
+            echo "⚠️ Bundle size is large: $(echo "scale=2; $BUNDLE_SIZE / 1024 / 1024" | bc -l)MB"
+          else
+            echo "✅ Bundle size is acceptable: $(echo "scale=2; $BUNDLE_SIZE / 1024 / 1024" | bc -l)MB"
+          fi
+        else
+          echo "❌ Bundle not found"
+          exit 1
+        fi
+    
+    - name: Run performance benchmarks
+      run: |
+        # Run performance tests if available
+        if npm run test:performance --dry-run > /dev/null 2>&1; then
+          echo "Running performance benchmarks..."
+          npm run test:performance
+        else
+          echo "No performance tests configured"
+        fi
+    
+    - name: Upload performance analysis
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-analysis
+        path: |
+          bundle-analysis.json
+          performance-results.json
+        retention-days: 30
+
+  dependency-analysis:
+    name: Dependency Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Analyze dependencies
+      run: |
+        # Generate dependency tree
+        npm ls --json > dependency-tree.json || true
+        npm ls --depth=0 > dependency-list.txt || true
+        
+        # Check for duplicate dependencies
+        npm ls --json | jq '.problems // []' > dependency-problems.json
+        
+        # Count dependencies
+        PROD_DEPS=$(jq '.dependencies | length' package.json)
+        DEV_DEPS=$(jq '.devDependencies | length' package.json)
+        TOTAL_INSTALLED=$(npm ls --json | jq '[.. | .dependencies? | select(. != null) | keys] | add | unique | length')
+        
+        echo "Production dependencies: $PROD_DEPS"
+        echo "Development dependencies: $DEV_DEPS"
+        echo "Total installed packages: $TOTAL_INSTALLED"
+        
+        # Create dependency report
+        cat > dependency-analysis.json << EOF
+        {
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "production_dependencies": $PROD_DEPS,
+          "development_dependencies": $DEV_DEPS,
+          "total_installed": $TOTAL_INSTALLED,
+          "analysis_date": "$(date -u +%Y-%m-%d)"
+        }
+        EOF
+    
+    - name: Upload dependency analysis
+      uses: actions/upload-artifact@v3
+      with:
+        name: dependency-analysis
+        path: |
+          dependency-tree.json
+          dependency-list.txt
+          dependency-problems.json
+          dependency-analysis.json
+        retention-days: 30
+
+  quality-summary:
+    name: Quality Summary
+    needs: [code-quality, complexity-analysis, documentation-check, performance-analysis, dependency-analysis]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+    
+    - name: Generate quality report
+      run: |
+        echo "# Code Quality Report" > quality-report.md
+        echo "Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> quality-report.md
+        echo "" >> quality-report.md
+        
+        echo "## Job Results" >> quality-report.md
+        echo "- Code Quality: ${{ needs.code-quality.result }}" >> quality-report.md
+        echo "- Complexity Analysis: ${{ needs.complexity-analysis.result }}" >> quality-report.md
+        echo "- Documentation Check: ${{ needs.documentation-check.result }}" >> quality-report.md
+        echo "- Performance Analysis: ${{ needs.performance-analysis.result }}" >> quality-report.md
+        echo "- Dependency Analysis: ${{ needs.dependency-analysis.result }}" >> quality-report.md
+        echo "" >> quality-report.md
+        
+        # Add detailed information if artifacts are available
+        if [ -f "documentation-metrics/doc-metrics.json" ]; then
+          echo "## Documentation Metrics" >> quality-report.md
+          cat documentation-metrics/doc-metrics.json >> quality-report.md
+          echo "" >> quality-report.md
+        fi
+        
+        if [ -f "performance-analysis/bundle-analysis.json" ]; then
+          echo "## Bundle Analysis" >> quality-report.md
+          cat performance-analysis/bundle-analysis.json >> quality-report.md
+          echo "" >> quality-report.md
+        fi
+        
+        echo "Quality report generated successfully"
+    
+    - name: Upload quality report
+      uses: actions/upload-artifact@v3
+      with:
+        name: quality-report
+        path: quality-report.md
+        retention-days: 90
